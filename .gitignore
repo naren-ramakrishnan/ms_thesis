@@ -1,0 +1,6 @@
+*.ropeproject
+*.log
+./src/build
+./psl
+./results
+./documentation/nabeel_thesis
