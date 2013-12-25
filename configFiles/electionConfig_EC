@@ -1,0 +1,224 @@
+{
+	"runOff" : "N",
+	"type" : "president",
+	"date" : "2013-02-17",
+	"country" : "ecuador",
+	"city" : "-",
+	"state" : "-",
+	"candidates":
+	{
+		"rafael correa":
+		{
+			"incumbent": "Y",
+			"alias": ["rafael","correa","@mashirafael","alianza","pais"],
+	        "weight" : 1.0,
+		    "polls" :   {
+							"10 Nov 2012" : 50.5,
+							"14 Nov 2012" : 39,
+							"19 Nov 2012" : 56,
+							"28 Nov 2012" : 51.2,
+							"29 Nov 2012" : 53.0,
+							"01 Dec 2012" : 51.2,
+							"14 Dec 2012" : 62.8,
+							"15 Dec 2012" : 51.2,
+							"21 Dec 2012" : 60.6,
+							"06 Jan 2013" : 53.3,
+							"10 Jan 2013" : 56.7,
+							"13 Jan 2013" : 47.65,
+							"18 Jan 2013" : 49.0,
+							"23 Jan 2013" : 63.0,
+							"26 Jan 2013" : 55.9,
+							"02 Feb 2013" : 53.1,
+							"05 Feb 2013" : 37.5,
+							"06 Feb 2013" : 48.18,
+							"07 Feb 2013" : 61.5
+						}
+		},
+		"lucio gutierrez":
+		{
+			"incumbent": "N",
+			"alias": ["lucio","gutierrez","@luciogutierrez3","sociadad","patriotica"],
+		    "weight" : 1.0,
+        	"polls" :   {
+							"10 Nov 2012" : 4.6,
+							"14 Nov 2012" : 13,
+							"19 Nov 2012" : 7,
+							"28 Nov 2012" : 5.4,
+							"29 Nov 2012" : 10,
+							"01 Dec 2012" : 3.1,
+							"14 Dec 2012" : 4.1,
+							"15 Dec 2012" : 6,
+							"21 Dec 2012" : 4.5,
+							"06 Jan 2013" : 8.85,
+							"10 Jan 2013" : 4.4,
+							"13 Jan 2013" : 1.44,
+							"18 Jan 2013" : 12,
+							"23 Jan 2013" : 4,
+							"26 Jan 2013" : 5.2,
+							"02 Feb 2013" : 6.9,
+							"05 Feb 2013" : 6.4,
+							"06 Feb 2013" : 2.05,
+							"07 Feb 2013" : 3.8
+						}
+		},
+		"alvaro noboa":
+		{
+			"incumbent": "N",
+			"alias": ["alvaro","noboa","@alvaronoboap","prian","renovador"],
+		    "weight" : 1.0,
+            "polls" :   {
+							"10 Nov 2012" : 2.4,
+							"14 Nov 2012" : 2,
+							"19 Nov 2012" : 3,
+							"28 Nov 2012" : 1.8,
+							"29 Nov 2012" : 2,
+							"01 Dec 2012" : 2.2,
+							"14 Dec 2012" : 2.1,
+							"15 Dec 2012" : 3.6,
+							"21 Dec 2012" : 1.8,
+							"06 Jan 2013" : 8.45,
+							"10 Jan 2013" : 2,
+							"13 Jan 2013" : 0.80,
+							"18 Jan 2013" : 4,
+							"23 Jan 2013" : 2,
+							"26 Jan 2013" : 2.3,
+							"02 Feb 2013" : 4.3,
+							"05 Feb 2013" : 2,
+							"06 Feb 2013" : 0.85,
+							"07 Feb 2013" : 1.6
+						}
+		},
+		"nelson zavala":
+		{
+			"incumbent": "N",
+			"alias": ["nelson","zavala","@roldosista","ecuatoriano","pre"],
+		    "weight" : 1.0,
+        	"polls" :   {
+							"28 Nov 2012" : 0.1,
+							"29 Nov 2012" : 2,
+							"01 Dec 2012" : 0.4,
+							"14 Dec 2012" : 0.2,
+							"15 Dec 2012" : 0.2,
+							"21 Dec 2012" : 0.2,
+							"06 Jan 2013" : 0.2,
+							"10 Jan 2013" : 0.6,
+							"13 Jan 2013" : 0.34,
+							"18 Jan 2013" : 2,
+							"23 Jan 2013" : 1,
+							"26 Jan 2013" : 0.6,
+							"02 Feb 2013" : 3,
+							"05 Feb 2013" : 1,
+							"06 Feb 2013" : 0.36,
+							"07 Feb 2013" : 0.6
+						}
+		},
+		"alberto acosta":
+		{
+			"incumbent": "N",
+			"alias": ["alberto","acosta","@albertoacostae","unidad","plurinacional","izquierdas"],
+			"weight" : 1.0,
+            "polls" :   {
+							"10 Nov 2012" : 3.2,
+							"14 Nov 2012" : 6,
+							"19 Nov 2012" : 4,
+							"28 Nov 2012" : 3.7,
+							"29 Nov 2012" : 8,
+							"01 Dec 2012" : 4.7,
+							"14 Dec 2012" : 2.8,
+							"15 Dec 2012" : 3.5,
+							"21 Dec 2012" : 3.5,
+							"06 Jan 2013" : 2.4,
+							"10 Jan 2013" : 3.4,
+							"13 Jan 2013" : 1.57,
+							"18 Jan 2013" : 6,
+							"23 Jan 2013" : 2,
+							"26 Jan 2013" : 4.4,
+							"02 Feb 2013" : 5.2,
+							"05 Feb 2013" : 4.5,
+							"06 Feb 2013" : 1.87,
+							"07 Feb 2013" : 2.5
+						}
+		},
+		"guillermo lasso":
+		{
+			"incumbent": "N",
+			"alias": ["guillermo","lasso","@lassoguillermo","creo"],
+			"weight" : 1.0,
+            "polls" :   {
+							"10 Nov 2012" : 15.2,
+							"14 Nov 2012" : 25,
+							"19 Nov 2012" : 15,
+							"28 Nov 2012" : 14.9,
+							"29 Nov 2012" : 22,
+							"01 Dec 2012" : 13.8,
+							"14 Dec 2012" : 10.7,
+							"15 Dec 2012" : 14.7,
+							"21 Dec 2012" : 11.2,
+							"06 Jan 2013" : 14.95,
+							"10 Jan 2013" : 12.1,
+							"13 Jan 2013" : 7.98,
+							"18 Jan 2013" : 18,
+							"23 Jan 2013" : 9,
+							"26 Jan 2013" : 12.9,
+							"02 Feb 2013" : 19.5,
+							"05 Feb 2013" : 29.5,
+							"06 Feb 2013" : 9.98,
+							"07 Feb 2013" : 9.2
+						}
+		},
+		"mauricio rodas":
+		{
+			"incumbent": "N",
+			"alias": ["mauricio","rodas","@mauriciorodasec","suma"],
+		    "weight" : 1.0,
+        	"polls" :   {
+							"10 Nov 2012" : 0.3,
+							"14 Nov 2012" : 0,
+							"19 Nov 2012" : 0,
+							"28 Nov 2012" : 0.4,
+							"29 Nov 2012" : 1,
+							"01 Dec 2012" : 0.5,
+							"14 Dec 2012" : 0.2,
+							"15 Dec 2012" : 0.7,
+							"21 Dec 2012" : 0.3,
+							"06 Jan 2013" : 0.55,
+							"10 Jan 2013" : 0.5,
+							"13 Jan 2013" : 0.42,
+							"18 Jan 2013" : 1,
+							"23 Jan 2013" : 1,
+							"26 Jan 2013" : 1.9,
+							"02 Feb 2013" : 2.1,
+							"05 Feb 2013" : 1.5,
+							"06 Feb 2013" : 1.36,
+							"07 Feb 2013" : 1.3
+						}
+		},
+	   "norman wray":
+		{
+			"incumbent": "N",
+			"alias": ["norman","wray","@normanwray","raptura","raptura25"],
+			"weight" : 1.0,
+            "polls" :   {
+							"10 Nov 2012" : 0.1,
+							"14 Nov 2012" : 0,
+							"19 Nov 2012" : 0,
+							"28 Nov 2012" : 0.1,
+							"29 Nov 2012" : 2,
+							"01 Dec 2012" : 0.4,
+							"14 Dec 2012" : 0.3,
+							"15 Dec 2012" : 0.9,
+							"21 Dec 2012" : 0.2,
+							"06 Jan 2013" : 0.2,
+							"10 Jan 2013" : 0.3,
+							"13 Jan 2013" : 0.4,
+							"18 Jan 2013" : 2,
+							"23 Jan 2013" : 1,
+							"26 Jan 2013" : 1.3,
+							"02 Feb 2013" : 2.7,
+							"05 Feb 2013" : 0,
+							"06 Feb 2013" : 0.53,
+							"07 Feb 2013" : 0.6
+						}
+		}
+	}
+}

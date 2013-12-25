@@ -1,0 +1,77 @@
+{
+	"runOff" : "N",
+	"country" : "venezuela",
+	"city" : "-",
+	"state" : "-",
+	"date" : "2013-04-15",
+	"type" : "president",
+	"candidates" :
+	{
+		"nicolas maduro":
+		{
+			"alias":["maduro", "@NicolasMaduro", "United Socialist Party of Venezuela",
+						"Partido Socialista Unido de Venezuela", "PSUV", "Gran Polo Patriotico", "Great Patriotic Pole", "GPP"],
+			"incumbent":    "Y",
+            "weight":  1.0,
+			"polls" :   {
+							"19 Feb 2013" : 50,
+							"18 Mar 2013" : 49.2,
+							"19 Mar 2013" : 56,
+							"24 Mar 2013" : 53.8,
+							"31 Mar 2013" : 56.6,
+							"02 Apr 2013" : 54.3,
+							"07 Apr 2013" : 34.9,
+							"09 Apr 2013" : 44,
+							"11 Apr 2013" : 42.7
+						}
+			
+		},
+		"henrique capriles radonski":
+		{
+			"alias":["henrique capriles", "capriles", "@hcapriles", "Mesa de la Unidad Democratica", "Democratic Unity Roundtable", "MUD"] ,
+	        "weight":  1.0,
+		    "incumbent":"N",
+			"polls" :   {
+							"19 Feb 2013" : 36,
+							"18 Mar 2013" : 34.8,
+							"19 Mar 2013" : 37.75,
+							"24 Mar 2013" : 31.6,
+							"31 Mar 2013" : 30.6,
+							"02 Apr 2013" : 39.7,
+							"07 Apr 2013" : 39.7,
+							"09 Apr 2013" : 43,
+							"11 Apr 2013" : 43.6
+						}
+		},
+		"maria josefina bolivar":
+		{
+			"alias":["bolivar", "@mariabp2012", "United Democratic Party for Peace and Freedom", "PDUPL"],
+		    "weight":  1.0,
+        	"incumbent":"N"
+		},
+		"reina sequera":
+		{
+			"alias":["reina sequera", "sequera", "Poder Laboral", "PL", "Labor Power"],
+			"weight":  1.0,
+            "incumbent":"N"
+		},
+		"eusebio mendez":
+		{	
+			"alias":["eusebio mendez", "eusebio", "NUVIPA", "New Vision for my Country"],
+			"weight":  1.0,
+            "incumbent":"N"
+		},
+		"julio mora":
+		{
+			"alias":["julio mora","UDEMO"],
+		    "weight":  1.0,
+            "incumbent":"N"
+		},
+		"fredy tabarquino":
+		{
+			"alias":["fredy", "tabarquino", "JOVEN"],
+		    "weight":  1.0,
+        	"incumbent":"N"
+		}					
+	} 		
+}

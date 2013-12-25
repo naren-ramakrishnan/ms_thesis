@@ -1,0 +1,109 @@
+{
+	"runOff" : "N",
+	"type" : "president",
+	"date" : "2013-11-24",
+	"country" : "honduras",
+	"city" : "-",
+	"state" : "-",
+	"candidates":
+	{
+		"juan orlando hernandez":
+		{
+			"incumbent" : "N",
+			"alias" : ["juan orlando", "orlando hernandez", "@JuanOrlandoH", "National Party", "Partido Nacional"],
+	        "weight" : 1.0,
+		    "polls" :	{
+							"13 Sep 2013" : 27,
+							"09 May 2013" : 18,
+							"25 Sep 2013" : 21.90,
+							"05 Oct 2013" : 21,
+							"15 Oct 2013" : 28
+						}
+		},
+		"mauricio villeda bermudez":
+		{
+			"incumbent" : "N",
+			"alias" : ["mauricio villeda", "Partido Liberal", " Liberal Party", "@VilledaMauricio" ],
+		    "weight" : 1.0,
+        	"polls" :	{
+							"13 Sep 2013" : 15,
+							"09 May 2013" : 14,
+							"25 Sep 2013" : 12,
+							"05 Oct 2013" : 13.30,
+							"15 Oct 2013" : 17
+						}
+		},
+		"xiomara castro de zelaya":
+		{
+			"incumbent" : "N",
+			"alias" : ["xiomara", "Liberty and Refoundation Party", "libertad y refundacion", "@XiomaraCastroZ", "libre"],
+			"weight" : 1.0,
+            "polls" :	{
+							"13 Sep 2013" :	29,
+							"09 May 2013" : 28,
+							"25 Sep 2013" : 22.80,
+							"05 Oct 2013" : 31.20,
+							"15 Oct 2013" : 27
+						}
+		},
+		"romeo vasquez velasquez":
+		{
+			"incumbent" : "N",
+			"alias" : ["romeo vasquez", "@RomeoVazquezV", "partido alianza patriotica", "alianza", "Honduran Patriotic Alliance"],
+			"weight" : 1.0,
+            "polls" :	{
+							"25 Sep 2013" :	0.20,
+							"05 Oct 2013" : 0,
+							"15 Oct 2013" : 0
+					}
+		},
+		"andres pavon":
+		{
+			"incumbent" : "N",
+			"alias" : ["pavon", "Partido Unificacion Democratica", "PUD", "Democratic Unification Party", "@andrespavon_", "UD"],
+		    "weight" : 1.0,
+            "polls" :	{
+							"25 Sep 2013" : 0.40,
+							"05 Oct 2013" : 0,
+							"15 Oct 2013" : 0
+					}
+		},
+		"olre solis":
+		{
+			"incumbent" : "N",
+			"alias" : ["olre", "solis", "Partido Democratica Cristiano de Honduras", "Christian Democratic Party", "DC"],
+			"weight" : 1.0,
+            "polls" :	{
+							"25 Sep 2013" : 0,
+							"05 Oct 2013" : 0,
+							"15 Oct 2013" : 0
+						}
+		},
+		"salvador nasralla":
+		{
+			"incumbent" : "N",
+			"alias" : ["nasralla", "@SalvadorNasrala", "Partido Anticorrupcion", "PAC"],
+		    "weight" : 1.0,
+        	"polls" :	{
+							"13 Sep 2013" : 11,
+							"09 May 2013" : 21,
+							"25 Sep 2013" :	22.80,
+							"05 Oct 2013" : 14.80,
+							"15 Oct 2013" : 9
+
+						}
+		},
+		"jorge aguilar paredes":
+		{
+			"incumbent" : "N",
+			"alias" : ["@jaguilarparedes", "paredes", "jorge aguilar", "Partido Innovacion y Unidad", "PINU", "Innovation and Unity Party"],
+			"weight" : 1.0,
+            "polls" :	{
+							"25 Sep 2013" : 0.20,
+							"05 Oct 2013" : 0,
+							"15 Oct 2013" : 0
+
+						}
+		}
+	}
+}	

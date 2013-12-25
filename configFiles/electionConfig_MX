@@ -1,0 +1,68 @@
+{
+	"runOff" : "N",
+	"country" : "mexico",
+	"city" : "-",
+	"state" : "-",
+	"date" : "2012-07-01",
+	"type" : "president",
+	"candidates":
+	{
+		"andres manuel lopez obrador":
+		{
+			"alias": ["andres manual", "lopez obrador", "PRD", "@lopezobrador_", "AMLO", "el peje"],
+			"incumbent":"N",
+            "weight": 1.0,
+			"polls": {
+						"02 May 2012" : 22.7,
+						"15 May 2012" : 22.433,
+						"20 May 2012" : 27.4,
+						"31 May 2012" : 28.6,
+						"12 Jun 2012" : 29.33,
+						"22 Jun 2012" : 27.65
+					 }
+			
+		},
+		"enrique pena nieto":
+		{
+			"alias": ["pena nieto", "nieto", "Institutional Revolutionary Party", "Partido Revolucionario Institucional", "PRI", "@EPN"],
+	        "weight": 1.0,
+		    "incumbent":"N",
+			"polls": {
+						"02 May 2012" : 49.4,
+						"15 May 2012" : 50.8,
+						"20 May 2012" : 36.3,
+						"31 May 2012" : 42.6,
+						"12 Jun 2012" : 34.9,
+						"22 Jun 2012" : 37.7
+					 }
+		},
+		"josefina eugenia vazquez mota":
+		{
+			"alias": ["josefina", "vazquez mota", "National Action Party", "PAN", "@JosefinaVM"],
+		    "weight": 1.0,
+        	"incumbent":"N",
+			"polls": {
+						"02 May 2012" : 26.7,
+						"15 May 2012" : 25.5,
+						"20 May 2012" : 22.0,
+						"31 May 2012" : 25.033,
+						"12 Jun 2012" : 21.5,
+						"22 Jun 2012" : 23
+					 }
+		},
+		"gabriel ricardo quadri de la torre":
+		{
+			"alias" : ["gabriel quadri", "de la torre","@g_quadri", "Partido Nueva Alianza", "PANAL"],
+			"weight": 1.0,
+            "incumbent":"N",
+			"polls": {
+						"02 May 2012" : 1.2,
+						"15 May 2012" : 1.267,
+						"20 May 2012" : 9.5,
+						"31 May 2012" : 3.36,
+						"12 Jun 2012" : 3.3,
+						"22 Jun 2012" : 1.75
+					 }
+		}
+	}
+}

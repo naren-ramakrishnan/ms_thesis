@@ -1,0 +1,50 @@
+{
+	"country" : "chile",
+	"city" : "-",
+	"state" : "-",
+	"runOff" : "Y",
+	"type" : "president",
+	"date" : "2013-11-17",
+	"candidates":
+	{
+		"michelle bachelet":
+		{
+			"incumbent" : "N",
+			"alias" : ["bachelet", "@ComandoMichelle", "PS", "socialist party", "Partido Socialista de Chile"],
+            "weight" : 1.0,
+			"polls" :	{
+							"22 Jun 2013" : 51,
+							"10 Jul 2013" : 39,
+							"18 Aug 2013" : 45,
+							"07 Sep 2013" : 39.8,
+							"09 Sep 2013" : 32,
+							"12 Sep 2013" : 38,
+							"27 Sep 2013" : 44.4,
+							"04 Oct 2013" : 33.5,
+							"10 Oct 2013" : 45.3,
+							"18 Oct 2013" : 31,
+							"19 Oct 2013" :	40,
+                            "02 Nov 2013" : 46.2,
+                            "07 Nov 2013" : 32
+						}
+		},
+		"evelyn rose matthei fornet":
+		{
+			"incumbent" : "N",
+			"alias" : ["matthei", "independent democratic union", "Union Democrata Independiente", "UDI", "@evelynmatthei", "@VotoEvelyn2014" ],
+	        "weight" : 1.0,
+		    "polls" :	{
+							"07 Sep 2013" : 17.7,
+							"09 Sep 2013" : 21,
+							"12 Sep 2013" : 27,
+							"27 Sep 2013" : 17.3,
+							"04 Oct 2013" : 21,
+							"10 Oct 2013" : 15.9,
+							"18 Oct 2013" : 19.5,
+							"19 Oct 2013" :	26,
+                            "02 Nov 2013" : 21.7,
+                            "07 Nov 2013" : 20
+						}
+		}
+	}
+}	
