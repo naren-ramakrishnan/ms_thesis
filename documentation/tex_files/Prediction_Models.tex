@@ -1,3 +1,64 @@
-\label{sec:background}
 \chapter{Prediction Models}
-\markright{Aravindan Mahendiran \hfill Chapter 2. Background \hfill}
+\markright{Aravindan Mahendiran \hfill Chapter 3. Prediction Models \hfill}
+
+In this section we review two prediction models we adapted from current literature to test our hypothesis. 
+The first one is a naive model that forecasts elections based on the counts of mentions of a candidate.
+We dub this as  \emph{"unique visitor model"} and is adapted from \cite{saez2011total} and \cite{tumasjan2010predicting}.
+The second model uses a regression fit to regress from tweet features to opinion polls and then predicts election. 
+This we dub as the \emph{"regression model"} and is adapted from \cite{bermingham2011using} and \cite{o2010tweets}.
+\section{Unique Visitor Model}
+Without any loss of genrerality, it can be assumed that large parties that are more popular will have a larger social media foot print than smaller and less popular parties. 
+This model takes advantage of this assumption and predicts elections by calculating the relative popularity of candidates contesting the election.
+We first define a vocabulary for each candidate. 
+This vocabulary is crafted by hand and includes the candidate's names and aliases, the name and acronyms for his/her political party and the official Twitter handle of the candidate.
+For the given time period, the tweets from the country in question are tracked for the occurance of the terms in the vocabulary.
+We then build a time series of sentiment and klout scores from the tweets returned.
+Klout score is a value provided by Klout.com that quantifies the impact each user has on social media. 
+We use the sentiment scores provided as a part of the meta-data of the tweet. 
+%The sentiment scores typically fall in the range of $[-15,15]$ and is provided by Lexalytics - a pioneer in linguistic processing.
+Once a time series of the klout and sentiment scores are built, we calculate the absolute populatrity of a candidate $C_d$ as:
+\begin{equation}
+{C_d} = \sum_i K_i * UCS_{id}
+\end{equation}
+where $K_i$ is the klout score for user $i$, and $UCS_{id}$ is User Candidate Score, the average of sentiment scores for all tweets from user $i$ about candidate $d$.
+We then normalize the popularity scores across all candidates so that they sum to $1$.
+This gives us the relative popularity of each candidate $P_d$ using which we predict the elections.
+\begin{equation}
+{P_d} = \sum_i \frac{C_d}{C_i}
+\end{equation}
+From the above equations, it is noticable that each user contributes only once to the popularity score of a candidate.
+This was preferred to merely counting the mentions of a candidate since we wanted to remove the bias of bot generated tweets from election campaigns that boosted the number of times a candidate is mentioned on Twitter.
+
+\section{Regression Model}
+In this model, in addition to Twitter data, we leverage the opinion polls available for the elections to make our predictions.
+Like the earlier model we track the tweets that contain a word from the vocabulary defined for each candidate.
+We then define a linear regression fit that uses the opinion polls as dependent variable and features generated from these tweets as independent variable.
+We use a total of 6 features based on klout scores, number of unique users, total number of mentions, sentiment and incumbency.
+We normalize each of these features across all candidates to get the relative share of the volume. 
+For example for the we define share of positive mentions($SoPM$)  as: 
+\begin{equation}
+SoPM(x) = \frac{\#PositiveMentions(x)}{\sum_i \#PositiveMentions(i)} 
+\end{equation}
+and share of negative users($SoNU$) as:
+\begin{equation}
+SoNU(x) = \frac{\sum_j K_j}{\sum_i \sum_j K_j}
+\end{equation}
+where $K_j$ is the klout score of user $j$ who tweeted about a candidate.
+Similarly we define share of sentiment ($SoS$) as the sum of all sentiment scores normalized across all candidares. 
+We use a binary variable for incumbency. 
+We then build a timeline of opinion polls. 
+For each of the polling dates we calculate these features by using tweets created during the 10 day window leading up to the polling date.
+When we have more than one polling hosue publishing its opinion poll for the same date we take the average of the polls. 
+Once we create a feature set for all the polling dates, we fit a simple least square regression as :
+\begin{equation}
+\begin{split}
+Popularity(x) = \alpha_1 * SoPM(x) + \alpha_2 * SoNM(x) \\
+						 + \beta_1 * SoPU(x) + \beta_2 * SoNU(x) \\
+						 + \gamma * SoS(x) + \delta * Incumbency(x) + \epsilon
+\end{split}
+\end{equation}
+From the  weights learnt from the regression fit we confirm that the sentiment and number of unique users have more predictive power than the number of mentions.	
+After learning the regression fit, we make a prediction by building such features using the same 10 day window leading up to the prediction date.
+
+\section{Performance}
+
