@@ -1,0 +1,395 @@
+\chapter{SeqInCloud: Sequence Analysis in the Cloud}
+\markright{Nabeel Meeramohideen Mohamed \hfill Chapter 3. SeqInCloud \hfill}
+\section{Overview}
+\label{sec:methodology}
+
+Fig.~\ref{fig:workflow} shows a SeqInCloud workflow, implemented using the Azure HDInsight cloud framework. SeqInCloud~\cite{seqincloud} uses Hadoop MapReduce framework and runs the workflow in a distributed fashion using multiple compute nodes provisioned in the cloud. The workflow starts with the alignment stage, which uses our own distributed implementation of \textit{BWA} and supports both single- and paired-end sequence alignment. The aligned reads are sorted, merged, and fed into a local realignment stage, which uses the \textit{RealignerTargetCreator} and \textit{IndelRealigner} walkers\footnote{GATK is structured into walkers and traversals. GATK  walkers are analysis modules that process data fed by the GATK traversals.} from GATK. The realigned reads are fixed for discrepancy in mate information using Picard's \textit{FixMateInformation}, de-duplicated using Picard's \textit{MarkDuplicates}, and re-indexed. The quality score of the de-duplicated reads are recalibrated using \textit{CountCovariates} and \textit{TableRecalibration} walkers. This is followed by the identification and filtering of structural variants (SNP and INDELS) using \textit{UnifiedGenotyper} and \textit{VariantFiltration} walkers. Finally, the variants are merged using \textit{CombineVariants} walker. SeqInCloud takes FASTQ file (couple of them for paired end alignment) as input and emits both structural variants in VCF format and analysis ready reads in BAM format. The input and output varies if one attempts to selectively run different combination of stages, using the command line interface.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[scale=0.5]{pics/workflow.pdf}
+  \caption{SeqInCloud Workflow}
+  \label{fig:workflow}
+\end{figure}
+
+\section{Design and Implementation}
+
+\subsection{SeqInCloud Workflow Stages}
+
+Here, we present design details on the various stages in SeqInCloud, in particular, sequence alignment, local realignment, and base quality  recalibration \& variant calling.
+
+\subsubsection{Sequence Alignment} 
+SeqInCloud uses BWA~\cite{surveyalgo} to run both single-and paired-end sequence alignment in the MapReduce framework. SeqInCloud utilizes the Windows port of BWA from \cite{BOW}. The input FASTQ file(s) are split into multiple fragments by the mappers. The number of fragments are same as the number of reduce slots in the cluster. These fragments are aligned in parallel by the reducers. Considering the human reference genome, per compute node, BWA requires about 3-4~GB of memory, and the Hadoop daemons require about 2~GB of memory. If the compute nodes are medium-sized Azure virtual machine (VM) instances that has a fixed memory limit of 3.5~GB, there would be resource constraints and running BWA under such constraints results in ``out of heap space'' memory errors. To address these errors and to provide more flexibility in VM provisioning, SeqInCloud provides the flexibility to offload the sequence-alignment stage either completely or partially to on-premise resources. The resulting BAM files are then transferred to the cloud using application-level compression (e.g., conversion to CRAM), as described in Section~\ref{sec:compression}.
+
+\subsubsection{Local Realignment}
+
+The local realignment stage consists of two steps: (1) identifying suspicious alignment intervals
+that require realignment and (2) running the realigner. The suspicious intervals are identified using GATK's RealignerTargetCreator, which is a locus-based walker that is capable of processing read sequences independently by intervals. The realignment is done using GATK's IndelRealigner, which is a read-based walker, that mandates a single GATK instance to process read sequences from the same contig.  
+
+\subsubsection{Base Quality Recalibration \& Variant Calling}
+
+The base quality recalibration consists of two steps: CountCovariate and TableRecalibration. The CountCovariate stage determines new empirical quality score used for recalibration. This is followed by the TableRecalibration step, which rewrites the quality score of the reads with the empirical quality values calculated by the CountCovariate stage. The structural variants are identified using UnifiedGenotyper, which is a locus-based GATK walker used for SNP and indel calling. A single MapReduce job is used for both TableRecalibration and UnifiedGenotyper stage to improve performance. In addition, the recalibrated BAM files from the TableRecalibration stage are written to the local filesystem (local FS), which provides 10- to 15-fold faster write throughput than HDFS (verified using Hadoop TestDFSIO benchmark). The UnifiedGenotyper processes recalibrated BAM files directly from the local FS. The recalibrated BAM files and variants (using CombineVariants walker) are finally merged. 
+
+The variants are stored in a variant call format (.vcf) file, as discussed in the section~\ref{sec:background}. The variant files are very small compared to the input BAM file and the size of the variant file completely depends on the number of genetic variants in the input dataset (Fig. \ref{fig:inpoutsize}). As a result, there cannot be a definite model to predict the size of variants from the input dataset size. 
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[scale=0.65]{pics/inpoutsize.pdf}
+  \caption{Input BAM size vs Output variant file size}
+  \label{fig:inpoutsize}
+\end{figure}
+
+The InputFormat and RecordReader for handling BGZF-compressed BAM files are used from the Hadoop BAM~\cite{hbam} library. The RecordReader provided by Hadoop BAM is extended in SeqInCloud to define genomic intervals or loci for each GATK instance invoked by the Hadoop mapper process.
+
+\section{SeqInCloud Optimizations}
+\label{sec:optimizations}
+
+In this section, we present several techniques aimed at optimizing the execution cost of SeqInCloud in cloud environments. This section discusses both the compute and data transfer optimizations implemented by SeqInCloud.
+
+\subsection{Compute Optimizations}
+
+\subsubsection{Fine Grained Partitioning}
+
+SeqInCloud partitions the dataset by loci corresponding to each MapReduce split rather than by contig. This ensures high scalability and well-balanced work distribution among mappers/reducers. 
+
+As shown in figure~\ref{fig:contig}, the alignment stage is embarrassingly parallel and hence can be partitioned based on the number of cores/nodes. But, the intermediate stages can be partitioned only by chromosome/contig (a single GATK instance assigned to process a single contig/chromosome) to ensure functional correctness, with the final stage (Genotyper) being an exception. As a result, contig-based partitioning heavily relies on the distribution of reads across contigs in the input dataset. For example, if the reads are clustered to a particular contig, the mapper/reducer processing this contig runs for a longer duration. This creates an imbalance in the workload distribution and skews the overall execution time, which in turn leads to under-utilization of cluster resources. In addition, contig-based partitioning imposes an upper bound on scalability because it cannot scale beyond the number of unique contigs in the input dataset, irrespective of the number of available cluster nodes. 
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[scale=0.65]{pics/contig.pdf}
+  \caption{Contig-based partitioning}
+  \label{fig:contig}
+\end{figure}
+
+In the case of data partitioning by loci, as shown in Fig.~\ref{fig:loci}, the input dataset can be partitioned at a more finer granularity than contig-based partitioning. This enables multiple GATK instance or mappers to process data belonging to the same contig/chromosome, which improves scalability of the pipeline and ensures equal distribution of work among the mappers. In-addition, each partition processed by a mapper process, corresponds to a map-reduce split for which the mapper has local access to. This reduces the inter-node data accesses. After partitioning the input data by loci, multiple GATK instance can process each partition. Each instance further subdivides the genome interval corresponding to its partition into sub-intervals and processes them. However, implementing a genome analysis pipeline purely based on loci-based processing introduces performance bottleneck to certain stages in the pipeline, which will be discussed later.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[scale=0.65]{pics/loci.pdf}
+  \caption{Loci-based partitioning}
+  \label{fig:loci}
+\end{figure}
+
+Enabling loci-based partitioning and processing introduces functional incorrectness, as the reads belonging to the same contig/chromosome would be processed by different processes, as shown in Fig.~\ref{fig:lociproblem}. 
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[scale=0.65]{pics/lociproblem.pdf}
+  \caption{Loci-based partitioning - The Problem}
+  \label{fig:lociproblem}
+\end{figure}
+
+SeqInCloud provides the following mechanisms to enable loci-based processing for the Local Realignment and CountCovariate stages. 
+
+\textbf{Local Realignment Stage: }
+
+Enabling loci-based partitioning for the local realignment stage results in the following problem: If a read is realigned, its new alignment location has to be updated in its mate pair and vice versa. This is not possible if realignment for a read and its mate pair is handled by different GATK instances, as it leads to incorrect results, shown in Fig.~\ref{fig:realignproblem}. In this figure, the read processed by ``GATK Instance 2" is realigned from its original location 16050000 to 16050010. This new location is not updated in its mate pair as it is processed by another instance ``GATK Instance 1". The mate pair still points to the original location (16050000) of its mate. Due to this restriction, the maximum parallelism that can be achieved for the indel realignment step is equal to the number of contigs the input BAM file spans across. So, in a sample data set, if all the reads are aligned to a single contig (e.g., chr20), the realignment step cannot run in parallel using multiple GATK instances. 
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[scale=0.65]{pics/realignproblem.pdf}
+  \caption{Local Realignment - The Problem}
+  \label{fig:realignproblem}
+\end{figure}
+
+SeqInCloud provides a novel and scalable solution that enables multiple GATK instances to process read sequences from the same contig. This is achieved by using information on the \textit{maximum insert size} between a read and its mate pair that GATK considers for realignment. GATK's IndelRealigner defines this as 3000 bases by default. Our solution, as shown in Fig.~\ref{fig:indel}, adjusts the genomic interval provided as an input to each GATK instance, such that there is a window of maximum insert size base locations on either side of the actual interval the split spans across. For example, if a split spans across an actual interval of chr1: x-y, the adjusted interval would be chr1: (x-3000)-(y+3000), capped by the length of the contig. Invoking each instance of IndelRealigner in this fashion includes additional reads that provide the necessary mate information to realign reads in the actual interval. The reads in the dummy region are realigned and emitted as part of the MapReduce split they belong to. 
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[scale=0.75]{pics/IndelRealign.pdf}
+  \caption{Design of IndelRealigner Stage}
+  \label{fig:indel}
+\end{figure}
+
+As shown in Fig. \ref{fig:optlr}, the base design does not employ loci-based partitioning in the local-realignment stage because this creates data-dependency between adjacent partitions while processing sequences that belong to the same contig. As a result, the sorted alignments from the previous stage are merged into a single BAM file, indexed and then fed as input to the local-realignment stage.
+
+This imposes a performance bottleneck, since the merge and index step is carried out by a single processing instance. The improved design addresses this bottleneck by completely eliminating the merge step in the local-realignment stage. It achieves this by using a combination of contig-based partitioning and loci-based processing approach. The sorted BAM records are partitioned by contig, indexed in parallel and then fed as input to the local-realignment stage. The local realignment step can now process each contig independently using loci-based approach. This eliminates the merge step as well as utilizes multiple processing instance to index the BAM fragments in parallel improving the performance of the pipeline.
+
+\begin{figure}[!tpb]
+  \centering
+  \includegraphics[width=0.65\textwidth]{pics/optlr.pdf}
+  \caption{Mix of contig and loci based approach for Local Realignment stage}
+  \label{fig:optlr}
+\end{figure}
+
+The optimized workflow is depicted in Fig.~\ref{fig:workflowopt}
+
+\begin{figure}[!tpb]
+  \centering
+  \includegraphics[width=0.65\textwidth]{pics/workflowopt.pdf}
+  \caption{Optimized SeqInCloud Workflow}
+  \label{fig:workflowopt}
+\end{figure}
+
+\textbf{CountCovariate Stage: }
+
+The CountCovariates walker from GATK mandates that a single contig/chromosome should be processed by a single GATK instance to ensure functional correctness. SeqInCloud addresses this issue by having the mappers process partitions at a loci level and communicate the covariate values to a single reducer process. The reducer aggregates identical covariates from all mappers and calculates a new empirical quality score using Phred scores\footnote {Phred is the most widely used basecalling program due to its high base calling accuracy.}. In-order to reduce the load on a single reducer process, each node uses a combiner to perform a reduction on the map output, i.e., to locally aggregate identical covariates. The final covariate file from the reducer is used further for the recalibration of reads.
+
+\subsubsection{Storage Tiering}
+
+SeqInCloud uses different storage resources that are available in the HDInsight environment, such as Azure Blob, HDFS, and local filesystem. Blob is a Windows Azure storage service that stores unstructured data in a shared volume. Blob storage is both local- and geo-replicated for disaster recovery. The HDInsight service supports a new scheme asv:// for MapReduce jobs to access data directly from blobs, similar to the standard hdfs:// scheme used for accessing HDFS files. 
+
+To measure the read and write throughput of the local FS, Blob, and HDFS, we benchmarked the systems and, as expected, found that the local FS performed far better than the other two storage resources. Blob has higher write throughput than HDFS (3x), and HDFS has higher read throughput than Blob (1.4x). In-addition to HDFS, MapReduce can directly process the files that are available in blobs.
+
+%except for the case where a blob is used as an input stream and the record reader seeks a wide offset range. Due to this exception in HoA environment, the blob can only be used in the later stages of the workflow.  For better throughput, the blob needs to be provisioned in the same region as the compute nodes.
+
+We have defined three storage mappings, which use different combinations of storage resources for input/output in the workflow. The ``All HDFS'' mapping uses only HDFS, the ``All Blob'' mapping uses Blobs wherever possible, and the ``Mix'' mapping is structured as in Fig.~\ref{fig:mix}. This is done so that the best-suited storage resource based on the requirement of each stage and throughput is chosen for Input/Output. For example, local FS cannot be used in places where the data needs to be persistent after the completion of a job. In this case, the blob is the preferred storage to store the final persistent output of the workflow due to its higher write throughput and durability (when compared to HDFS).
+
+\begin{figure}[htbp]
+  \centering 
+  \includegraphics[scale=0.5]{pics/mixnew.pdf}
+  \caption{Feasible Input/Output Storage Resource for the ``Mix'' Mapping.}
+  \label{fig:mix}
+\end{figure}
+
+\subsubsection{Results and Discussion}
+\label{sec:results}
+
+We have evaluated SeqInCloud on a 32-node Azure cluster, where each node is a medium Hadoop on Azure (HoA)~\cite{HOA} instance. The medium instance is provisioned as a virtual machine with two cores, 3.5~GB of RAM, and 500~GB of disk space. For the rest of the paper, we will refer to each VM as a compute node. The compute nodes run Windows Server 2008 R2 Enterprise and Hadoop 0.20.203. The MapReduce cluster is configured with 64 map slots and 32 reduce slots. All experiments were run with a default HDFS block size of 256 MB. We used the following datasets from 1000 Genomes Project~\cite{1000genome} in our experiments for running the stages that follow the alignment stage: a 6-GB BAM file (NA12878) mapped to chr20 and an 11-GB (NA21143) and 30-GB (NA10847) BAM file mapped to an entire reference genome. The known variants database~\cite{dbSNP} used for count covariates stage is dbsnp\_135.b37.
+
+\noindent\textbf{Baseline Performance vs.\ SeqInCloud Performance}
+
+SeqInCloud partitions the input data by loci for the entire workflow. This results in maximal utilization of cloud resources. Fig.~\ref{fig:baseline} shows total execution time (in minutes) for local realignment, quality recalibration, and genotyper stages in the workflow, using contig- and loci-based partitioning. Contig-based partitioning serves as the baseline and uses local FS for input/output. In general, existing parallel GATK implementations use contig based partitioning and rely on shared storage systems like Network File System (NFS) to access the input/output data. Due to the lack of shared storage in HoA cloud environment, we used the following procedure to obtain the baseline results. The entire BAM file and the reference genome were distributed to the local FS of all cluster nodes, and each node was dynamically assigned with a set of unique contigs. The baseline time corresponds to the parallel time taken by the nodes to complete the above specified stages for its assigned contig. 
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[scale=0.65]{pics/BaselineVsAzure.pdf}
+  \caption{Comparison of Baseline and SeqInCloud Execution Time of Entire Workflow
+           (Except Alignment Stage) for Datasets NA12878 and NA21143.}	
+  \label{fig:baseline}
+\end{figure}
+
+As discussed in Section~\ref{sec:methodology}, the baseline run for the single contig NA12878 dataset utilizes only a single cluster node for the IndelRealigner and CountCovariate stages, thus affecting scalability and accruing usage cost for idle resources.  As a result, the run time of
+SeqInCloud is nearly 2.7-fold faster than the baseline run time for the NA12878 dataset. In the case of the NA21143 dataset, where sequences are aligned to the entire genome, SeqInCloud ran 12\% faster than the baseline. The performance improvement here is not as significant because the total number of cluster nodes (32) or map slots (64) is less than the number of contigs (84).  We would
+see an increasing improvement in performance as we keep increasing the number of cluster nodes/map slots beyond 84, which is the baseline upper bound on scalability for the NA21143 dataset.
+
+\noindent\textbf{Evaluation of Scalability}
+
+We evaluate the strong-scaling behavior of SeqInCloud by doubling the number of virtual cores and measuring run time for a fixed workload size. We study scalability using the 24.3-GB NA10847 dataset (lossless compressed) and the 11-GB NA21143 dataset. The MapReduce split size was set to the HDFS block size of 256~MB. The number of virtual cores was varied between 8, 16, 32, and 64.  Fig.~\ref{fig:scalNA10847} and Fig.~\ref{fig:scalNA21143} shows the run time of the major time-consuming stages in the workflow, i.e., IndelRealigner, CountCovariate, TableRecalibration and UnifiedGenotyper.  SeqInCloud exhibits near-linear scaling until 32 cores, after which the number of map waves becomes too small to observe much performance improvement.
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[scale=0.65]{pics/scalNA10847.pdf}
+  \caption{Execution Time
+           of the Major Stages in SeqInCloud for the 24.3~GB NA10847 Dataset.}
+  \label{fig:scalNA10847}
+\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[scale=0.65]{pics/scalNA21143.pdf}
+  \caption{Execution Time
+           of the Major Stages in SeqInCloud for the 11~GB NA21143 Dataset.}
+  \label{fig:scalNA21143}
+\end{figure}
+
+In SeqInCloud, strong scaling depends on two major factors:
+\begin{itemize}
+\item
+
+\textbf{Number of Map Waves}, which is given by the number of map tasks divided by the total number of map slots in the cluster. Due to the fixed workload requirement of strong scaling, the number of map task remains the same, as we scale up/down the number of virtual cores. However, as we double the number of virtual cores, the number of map slots also doubles, and this halves the number of map waves. Since SeqInCloud does not depend on the nature of the input dataset and the map tasks almost run for the same duration, the number of map waves is one of the major components that determines scalability of SeqInCloud. From our strong-scaling numbers, we observe that doubling the number of virtual cores results in diminishing returns when the number of map waves becomes smaller (less than 3). This result serves as a guideline, as it enables one to know the maximum number of cluster nodes to be provisioned to ensure maximum resource utilization, and in turn, to optimize resource usage cost. 
+
+\item
+
+\textbf{Number of Reducers}, which is set to 9/10 of the number of reduce slots in the cluster to have a single reduce wave. As we double the number of virtual cores, the number of reduce slots also doubles. However, due to the fixed workload size, the size of data that needs to be written by each reducer halves. Thus, the time taken by the reduce phase halves when we double the cluster size. 
+\end{itemize}
+
+\noindent\textbf{Mix of Contig- and Loci-based Approach:}
+
+Here, we discuss the results of employing a mix of contig- and loci-based approach for the local-realignment stage.
+
+The experiments for this optimization was conducted on Microsoft Azure HDInsight service cluster, where each node is a large virtual machine instance configured with 4 cores, 7~GB of RAM and 1~TB of local disk space. The compute nodes are installed with Windows server 2008 R2 Enterprise and Hadoop 1.1.0. The MapReduce cluster is configured with a HDFS block size of 256~MB. The experiments use the following dataset from 1000 Genome project: NA19066, a 50~GB BAM file, dbsnp\_135.b37, the known sites db and the human reference genome.
+
+\noindent \textbf{Performance of Loci-only vs Mix Approach:}
+Fig.~\ref{fig:perfNA19066} compares the workflow execution time of all stages excluding the alignment stage in the pipeline, using base versus mix approach. The performance improvement varies between 16\% and 36\% due to the following reasons: The local-realignment stage is optimized such that the merge step is eliminated and the index step is run in parallel. In-addition, controlling the number of reducers in the local-realignment stage optimizes the number of parallel processing instances required for running the Mark-Duplicates stage. All these improvements are shown in the plot (as a table) for 32-node setup. The table provides a break up of the execution time (in hours) for the stages which are of interest.
+
+\begin{figure}[!h]
+  \centering
+  \includegraphics[width=0.65\textwidth]{pics/perfNA19066.pdf}
+  \caption{Performance comparison of loci-only and mix approach.}
+  \label{fig:perfNA19066}
+\end{figure}
+
+\noindent \textbf{Scalability of the Mix Approach:} We evaluated strong scaling by varying the number of nodes (4, 8, 16 and 32) and measuring the execution time of all stages except the alignment stage in the pipeline. The optimized version also exhibits near-linear scaling as shown in Fig.~\ref{fig:scalNA19066}. The graph also plots a best-fit linear trend line with an R-squared value of 0.9697, which is a good fit as the R-squared value is much closer to 1. In-addition, we can observe that the scalability deviates a little from the linear trend line at the data point corresponding to 32 nodes. This is because of the same reason described earlier, which is the dataset size was not sufficient enough to utilize all the cores of a 32-node cluster, i.e., the number of map waves is only around 1.5 for processing a 50~GB dataset using 32 nodes and 256~MB HDFS block size.
+
+\begin{figure}[!h]
+  \centering
+  \includegraphics[width=0.85\textwidth]{pics/scalNA19066.pdf}
+  \caption{Execution time of the workflow and the individual stages for NA19066 dataset with increasing number of nodes.}
+  \label{fig:scalNA19066}
+\end{figure}
+ 
+\noindent\textbf{Evaluation of Performance Due to Storage Tiering}
+
+We evaluated the performance of SeqInCloud using different combinations of storage resources to identify the right mix that delivers the best performance.  The results correspond to the
+execution time of SeqInCloud from TableRecalibration until the final merge stage and compares the ``All blob'' and ``Mix'' mappings with the ``All HDFS'' mapping.  The improved runtime of ``Mix'' or ``All Blob'' mapping in Fig.~\ref{fig:stgraph} is due to the higher write throughput of the blob/local filesystem.  For the TableRecalibration and UnifiedGenotyper stages, the ``All Blob'' mapping showed an improvement of 20\% . For the Merge Variant stage, ``Mix'' and ``All Blob'' mappings showed an improvement of 29\%. For the Merge BAM stage, ``Mix'' mapping showed an improvement of 26.4\%. Finally, the overall run time of ``All Blob'' mapping is better than the other two mappings. ``All Blob'' showed a performance improvement of 20\% and ``Mix'' showed a performance improvement of 19\% over ``All HDFS'' mapping.
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[scale=0.65]{pics/stgraph.pdf}
+  \caption{Execution Time of ``All HDFS'', ``Mix'' and ``All Blob'' Mappings.}
+  \label{fig:stgraph}
+\end{figure}
+
+\subsection{Data Transfer Optimizations}
+
+\subsubsection{Reference based compression}
+\label{sec:compression}
+
+SeqInCloud uses compression to optimize network and storage costs in the cloud. It uses the CRAM~\cite{CRAM} format, which is a reference-based compression mechanism that encodes and stores only the difference between a read sequence and reference genome. The CRAM toolkit~\cite{cramkit}
+, offered by the European Nucleotide Archive, contains tools and interfaces that provide programmatic access for compression/decompression. In order to ensure sensitivity and
+correctness of downstream analysis, SeqInCloud uses lossless compression by preserving quality scores but excluding unaligned reads as well as read names and tags from each BAM record.
+
+The reference based compression is implemented as shown in Fig.~\ref{fig:cram}. After aligning reads in parallel, each reducer writes its BAM file to HDFS. This is followed by a parallel sort of the reads using the TotalOrderPartitioner interface provided by the MapReduce framework. The sorted BAM records are converted to CRAM format by multiple reducers in parallel using the CRAM toolkit. The CRAM files are then transferred to the cloud using the secure file transfer service provided by the HoA framework. These CRAM files are typically 40\% to 50\% smaller than the BAM files, thus significantly reducing network traffic and costs. Once the data transfer is completed, a remote MapReduce job is triggered, which uses multiple mappers to decompress CRAM records to BAM records in parallel. The decompression results in a lossless BAM file, which is smaller than the original BAM file, thus reducing storage costs.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[scale=0.65]{pics/cram.pdf}
+  \caption{Reference Based Compression}
+  \label{fig:cram}
+\end{figure}
+
+From the above, compression is applicable under two scenarios: (1) when the sequence alignment stage is carried out using on-premise Hadoop resources and the BAM file needs to be transferred to the cloud and (2) when the final workflow result (i.e., the merged BAM file) needs to be persistently stored in the Blob. In the latter, instead of storing data in BAM format, it can be stored either in CRAM or lossless BAM format, thus bringing down the storage cost considerably. 
+
+It is worth noting that GATK 2.0 has introduced a new walker \textit{ReduceReads}, which performs a lossy compression of the NGS BAM file and reduces its size by 100-fold.  The reduced BAM file has just the information necessary to make accurate SNP and indel calls using UnifiedGenotyper walker. Using the CRAM format for compression has broader applicability than GATK ReduceReads, as the lossless BAM file can be used by other downstream analysis tools. In addition to this, ReduceReads compression takes much longer than CRAM compression (e.g., for a fragment of the NA12878 dataset of size 754 MB, the ReduceReads compression took 112 minutes vs. 10 minutes for the CRAM compression).
+
+\subsubsection{Acceleration using GPU}
+
+SeqInCloud uses compression to reduce data-transfer time from on-premise to cloud and improves performance. We use CUSHAW~\cite{cushaw}, a parallel GPU based short read aligner to implement client-plus-cloud model. CUSHAW is a CUDA compatible short read aligner based on Burrows-Wheeler transform (BWT). CUSHAW provides support to either output both aligned and unaligned reads to a SAM file or output aligned reads to a SAM file and unaligned reads to a FASTQ file. For single-end alignment, we set the maximum number of mismatches in the seed and full length to 0. This ensures that reads that perfectly match the reference will be part of the SAM file and rest of the reads will be part of the FASTQ file. The FASTQ file containing the unaligned reads will be later aligned in the cloud.
+
+% Decide on this later
+
+%For paired-end alignment, we changed a couple of source lines in CUSHAW to output aligned and mated read pairs to a SAM file and rest of the reads (read pairs that are aligned but not mated, read pairs having only one of its read aligned and read pairs with both reads unaligned) to a FASTQ file. If we use CUSHAW's default paired-end alignment options, majority of the reads will be
+%part of the FASTQ file, which is not desirable for reasons described later in this section. In-order to cover/align more reads, we use the following criteria for paired-end alignment: "-mms" and "-mmr" set to one to allow a maximum of one mismatch (in the seed/full length), "-i" option set to 500, to increase the insert size from CUSHAW's default value of 300 to BWA's default value of 500, which increases the probability of a read to find its mate and "-disable\_sw", to disable Smith-Waterman algorithm. The above mechanism ensures that that only read pairs that perfectly align with one mismatch and paired will be part of the SAM file. The FASTQ file will be aligned using BWA in the cloud environment. Here, we discuss the different execution plans for optimizing network costs.
+
+%\textit{Baseline Execution Plan:} Execution plan 1 (Fig. \ref{fig:plan1}) is the baseline plan, where the input FASTQ file is transferred to cloud for alignment, without any preprocessing in the client environment.
+%
+%\begin{figure}[!htbp]
+%  \centering
+%  \includegraphics[scale=0.35]{pics/Plan1.pdf}
+%  \caption{Execution Plan 1}
+%  \label{fig:plan1}
+%\end{figure}
+%
+%\textit{Non-Overlapping Client-Cloud Model: } Execution plans 2 \& 3 (Fig. \ref{fig:plan2_3}) uses both client and cloud environment, but not simultaneously.  As a result there is no overlap of communication and computation between client and cloud environment.
+%
+%\begin{figure}[!htbp]
+%  \centering
+%  \includegraphics[scale=0.35]{pics/Plan2_3.pdf}
+%  \caption{Execution Plan 2 and 3}
+%  \label{fig:plan2_3}
+%\end{figure}
+
+%\textit{Overlapping Client-Cloud Model: } Execution plans 4 \& 5 (Fig. \ref{fig:plan4_5} 
+
+As shown in Fig.~\ref{fig:gpuacc}, we use both client and cloud environment simultaneously, such that there is an overlap of communication and computation between client and cloud.  The unaligned reads in the FASTQ file will be aligned using BWA in the cloud.  The reads aligned using CUSHAW in the client environment will be transferred to the cloud and sorted and merged along with the other reads aligned by BWA in the cloud environment. This creates an opportunity to overlap the data-transfer and alignment of imperfectly matched reads in the cloud with the processing of perfectly matched reads and its transfer to the cloud. From our experiments, we observed that we can overlap nearly 20\% to 35\% of the maximum time, the maximum time being the time spent for the data-transfer and alignment of reads in the cloud. Also, CUSHAW is able to perfectly align nearly 55\% to 65\% of the total number of reads.
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[scale=0.55]{pics/gpuacc.pdf}
+  \caption{Acceleration using GPU}
+  \label{fig:gpuacc}
+\end{figure}
+
+\subsubsection{Results and Discussion}
+
+\noindent\textbf{Evaluation of Reference Based Compression}
+
+We evaluated the cost savings due to compression on a 14-node on-premise Hadoop cluster, where each node consisted of two quad-core Intel Xeon E5462 processors with 8 GB of RAM. The dataset used for evaluation is presented in the Fig.~\ref{fig:compdataset}. 
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[scale=0.65]{pics/compdataset.pdf}
+  \caption{Dataset used for Evaluation}
+  \label{fig:compdataset}
+\end{figure}
+
+The sequence alignment and sorting stage in the workflow were carried out using these on-premise resources. As discussed earlier, using the CRAM format instead of BAM reduces the amount of data transferred to the cloud by 40\% to 50\%. But, this improvement in the data transfer time comes with an additional overhead of compression from BAM to CRAM at on-premise and decompression from CRAM to lossless BAM at the cloud\footnote{The compression and decompression is achieved using interfaces from the CRAM toolkit.}. This overhead should be considered while evaluating the impact on workflow performance when using the CRAM format instead of the BAM format. Here, the workflow performance refers to the time taken to run the workflow till the alignment stage including the data transfer, compression and decompression time, if any. The workflow performance is said to \textit{break-even}, when the performance using BAM format is equal to the performance using CRAM format, as shown in Fig.~\ref{fig:breakeven}.
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[scale=0.65]{pics/breakeven.pdf}
+  \caption{Breakeven Point for Reference Based Compression}
+  \label{fig:breakeven}
+\end{figure}
+
+While using CRAM format, the workflow performance reaches break-even, when the sum of compression and decompression time equals the delta improvement in the data transfer time. At break-even, we only observe storage savings without any impact on workflow performance. The storage savings correspond to the percentage reduction in the size of the lossless BAM file when compared with the original BAM file. For the datasets used in our experiments, we observed break-even when using four to six on-premise nodes. When the number of on-premise nodes was greater than the number of nodes used for achieving break-even, we achieved an improvement in the workflow performance. Conversely, when the number of on-premise nodes was less, we observed a dip in the workflow performance.
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[scale=0.65]{pics/cptable.pdf}
+  \caption{Performance Improvement and Storage Savings for NA10847, NA21143 and 
+NA12878 Datasets due to Compression using a 14-node On-Premise Hadoop Cluster.}
+  \label{fig:cptable}
+\end{figure}
+
+Fig.~\ref{fig:cptable} shows the improvement in workflow performance and storage savings when using the CRAM format instead of the BAM format. Here the number of on-premise nodes (14) is greater than the break-even number of nodes (4-6). The performance improvement varies across datasets, as the efficacy of compression while using reference based compression mechanisms like CRAM, largely depends on the nature of alignments in the input BAM file. The nature of alignments refers to factors like the number of perfectly aligned reads, the length of read names, the number of tags, the number of unaligned reads etc. This determines the improvement in workflow performance, as it influences the compression, decompression and data transfer times. The decompression at the cloud results in a lossless BAM file, which has trimmed read names and does not contain tags, unaligned reads etc., when compared with the originial BAM file. As a result, the storage savings also varies across datasets.
+
+\noindent\textbf{Evaluation of GPU Acceleration using CUSHAW}
+
+We have evaluated the baseline performance, where the FASTQ files are completely transferred to the cloud and aligned against the performance of using GPU for accelerating the alignment stage. The client machine is comprised of a single quad core Intel® Core™ i5-2400 with 8 GB RAM and 1 Tesla C2050 GPU and for the cloud environment, we used a local cluster comprised of a five node cluster with 2 quad core AMD Opteron processors and 32 GB RAM.
+
+Fig.~\ref{fig:cushaw} shows the effect of using GPU acceleration for theoretically varying network bandwidth between the client and cloud environment. The result shows that as we keep increasing the network bandwidth, the data transfer time between the client and cloud environment becomes negligible. As a result, the difference in execution time between the baseline and GPU acceleration is determined solely by the difference in the alignment time, i.e., for aligning the complete FASTQ file vs pre-processing and aligning a fragment of the FASTQ file. Here the execution time refers to the sum of data transfer and alignment time.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[scale=0.75]{pics/cushaw.pdf}
+  \caption{Evaluation of GPU Acceleration using CUSHAW}
+  \label{fig:cushaw}
+\end{figure}
+
+%The experiments were conducted using a local client node with 2 Quad Core
+%processors, 32 GB RAM and 2 Tesla C2050 GPU cards. 5 local cluster nodes
+%were used for Hadoop job due to the unavailability of cloud resources.
+
+%Fig \ref{fig:segraph}. shows the runtime of the execution plans (p1, p3, p4 and
+%p5) for 3 datasets. p2 is not shown as its runtime always exceeds the baseline
+%runtime, irrespective of the dataset used. Fig \ref{fig:setable} shows the
+%percentage improvement in performance for using execution plans p3, p4 and p5
+%against the baseline execution plan p1.
+%
+%\begin{figure}[!hb]
+%  \centering
+%  \includegraphics[width=0.42\textwidth]{pics/segraph.pdf}
+%  \caption{Performance of execution plans for SE mapping}
+%  \label{fig:segraph}
+%\end{figure}
+%
+%\begin{figure}[!hb]
+%  \centering
+%  \includegraphics[scale=0.4]{pics/setable.pdf}
+%  \caption{Performance improvement of p3, p4 and p5 against baseline plan(p1) for SE}
+%  \label{fig:setable}
+%\end{figure}
+
+%\textit{Paired End Mapping Results}
+%
+%Fig \ref{fig:pegraph}. shows the runtime of the execution plans (p1, p4 and p5)
+%for 3 datasets. p3 is not included for PE alignment as it did not show any
+%performance improvement for SE alignment. Fig \ref{fig:petable} shows the
+%percentage improvement in performance for using execution plans p4 and p5
+%against the baseline execution plan p1.
+%
+%\begin{figure}[!hb]
+%  \centering
+%  \includegraphics[width=0.42\textwidth]{pics/pegraph.pdf}
+%  \caption{Performance of execution plans for PE mapping}
+%  \label{fig:pegraph}
+%\end{figure}
+%
+%\begin{figure}[!hb]
+%  \centering
+%  \includegraphics[scale=0.4]{pics/petable.pdf}
+%  \caption{Performance improvement of p4 and p5 against baseline plan(p1) for PE}
+%  \label{fig:petable}
+%\end{figure}
+
+\section{Applicability of SeqInCloud to Other Cloud Platforms}
+
+SeqInCloud is a pure MapReduce-based application written in Java. It is referred as a pure MapReduce application as it is completely platform independent and does not use any Hadoop streaming based components in its parallel implementation. Hadoop streaming based parallel implementations are typically platform dependent as it enables one to run any platform specific executable/binary in-parallel using Hadoop. As a result, the base SeqInCloud implementation, without any optimizations, can run on any on-premises or IaaS / PaaS cloud environments like Amazon EMR, Amazon EC2, Rackspace cloud servers, Google compute engine etc.
+
+Here, we discuss the applicability of various SeqInCloud optimizations across different cloud environments. 
+
+\noindent\textbf{Compute Optimizations:} Since \textit{fine-grained partitioning} is only a data decomposition and processing technique and does not use any cloud provider specific solution, this optimization is applicable to any cloud environment. \textit{Storage tiering} evaluates the mapping of input, intermediate and output data across different storage resources. We use local file-system, HDFS and Azure blob in the Microsoft HDInsight cluster. The physical storage for HDFS comes from the local disks of the cluster. The local file-system is also from the local disks, but is not managed by HDFS. It is used by the MapReduce jobs to stage temporary data and is not valid across multiple MapReduce jobs. Both local FS and HDFS are usually available in all cloud provider environments. The third storage resource, Azure blob is a cloud storage offering from Microsoft. Other cloud providers typically have their own cloud storage offering, for e.g., Amazon offers Simple Storage Service (S3). In a MapReduce job the storage URI has an access scheme which delineates the backing store for HDFS, for e.g. hdfs:// uses local disks, asv:// uses Azure blob and s3:// uses Amazon's storage service. Functionally, we have not tested if our implementation can work with a s3 URI in Amazon's EMR. The performance numbers from SeqInCloud will also be different across different cloud provider's storage offerings.
+
+\noindent\textbf{Data Transfer Optimizations:} \textit{Reference based compression} is achieved using the CRAM toolkit which offers interfaces for programmatic compression/decompression. Since the CRAM toolkit is written in java it is completely platform independent and can run as-is on any on-premises / cloud environment. The parallel compression/decompression achieved using multiple cluster nodes is also implemented as a MapReduce application and hence platform independent too. \textit{Acceleration using GPU} optimization requires running a GPU-based aligner, i.e., CUSHAW using the on-premises environment. CUSHAW is platform dependent and can run only in a Linux environment. On the other hand in the cloud side, we use only the basic SeqInCloud implementation. Hence this optimization will work for all cloud provider environments provided the on-premises environment is equipped with a single Linux based system that has NVIDIA CUDA-enabled GPUs based on Fermi architecture or newer.
