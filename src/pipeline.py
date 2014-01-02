@@ -338,8 +338,9 @@ def execute(arg):
                 for line in file:
                     word, group, weight = line.split(',')
                     seedWordList.append(word)
-            log.info("copying the seedFile to inputFolder")
-            os.system('cp ' + arg.seedFile + ' ' + inputFolder + '/belongedTo.csv')
+
+        log.info("copying the seedFile to inputFolder")
+        os.system('cp ' + arg.seedFile + ' ' + inputFolder + '/seedWords.csv')
         keywordList = list(set(keywordList).union(set(seedWordList)))
 
         try:

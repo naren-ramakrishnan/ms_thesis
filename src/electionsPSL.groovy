@@ -1,10 +1,6 @@
 /*	Author 		= 	Aravindan Mahendiran
  * 	email 		= 	aravind@vt.edu
- * 	version		=	5.0
- *  comments    =   combination of 1.0 and 2.0	
- *                  no SEED_WORD predicate. All loaded into BELONGED_TO
- *                  no contains and belongs to in propagating ismember thru
- *                  interactions
+ * 	version		=	8.0
  */
 
 package edu.umd.cs.linqs.embers
@@ -93,10 +89,11 @@ class electionsPSL{
 		model.add predicate: "NEGATIVE_SENTIMENT", types: [ArgumentType.UniqueID]
 		model.add predicate: "BELONGS_TO", types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
         model.add predicate: "BELONGED_TO", types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
+        model.add predicate: "SEED_WORD", types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
 
         log.info("adding constraints")
 		model.add PredicateConstraint.PartialFunctional, on: IS_MEMBER
-        //model.add PredicateConstraint.PartialFunctional, on: BELONGS_TO
+        model.add PredicateConstraint.PartialFunctional, on: BELONGS_TO
 
         log.info("adding priors")
         //strong negative priors to avoid junk words
@@ -104,9 +101,9 @@ class electionsPSL{
         model.add rule: ~IS_MEMBER(U,G), weight: 0.15
 
         log.info("defining rules")
-        //these rules are just stronger priors from previous rounds
-        model.add rule: BELONGED_TO(W,G) >> BELONGS_TO(W,G), weight: 0.8
-        model.add rule: WAS_MEMBER(U,G) >> IS_MEMBER(U,G), weight: 0.8
+        model.add rule: SEED_WORD(W,G) >> BELONGS_TO(W,G), weight: 1.0
+        model.add rule: BELONGED_TO(W,G) >> BELONGS_TO(W,G), weight: 1.0
+        model.add rule: WAS_MEMBER(U,G) >> IS_MEMBER(U,G), weight: 1.0
 
         //membership rules
 		model.add rule: (TWEETED(A,T) & CONTAINS(T,W) & BELONGS_TO(W,G) & POSITIVE_SENTIMENT(T)) >> IS_MEMBER(A,G), weight: 1.0
@@ -115,18 +112,18 @@ class electionsPSL{
         //propagating membership through social graph
         //retweets
         model.add rule: (IS_MEMBER(B,G) & TWEETED(A,T) & RETWEET_OF(T,B)) >> IS_MEMBER(A,G), weight: 1.0
-        model.add rule: (IS_MEMBER(B,G) & TWEETED(B,T) & RETWEET_OF(T,A)) >> IS_MEMBER(A,G), weight: 0.75
+        model.add rule: (IS_MEMBER(B,G) & TWEETED(B,T) & RETWEET_OF(T,A)) >> IS_MEMBER(A,G), weight: 1.0
         //mentions
-		model.add rule: (IS_MEMBER(A,G) & TWEETED(A,T) & MENTIONS(T,B) & POSITIVE_SENTIMENT(T)) >> IS_MEMBER(B,G), weight: 0.75
-		model.add rule: (IS_MEMBER(A,G) & TWEETED(B,T) & MENTIONS(T,A) & POSITIVE_SENTIMENT(T)) >> IS_MEMBER(B,G), weight: 0.75
+		model.add rule: (IS_MEMBER(A,G) & TWEETED(A,T) & MENTIONS(T,B) & POSITIVE_SENTIMENT(T)) >> IS_MEMBER(B,G), weight: 1.0
+		model.add rule: (IS_MEMBER(A,G) & TWEETED(B,T) & MENTIONS(T,A) & POSITIVE_SENTIMENT(T)) >> IS_MEMBER(B,G), weight: 1.0
 
         //propagating word preferences
         model.add rule: (IS_MEMBER(A,G) & TWEETED(A,T) & CONTAINS(T,W) & POSITIVE_SENTIMENT(T)) >> BELONGS_TO(W,G), weight: 1.0
         model.add rule: (IS_MEMBER(A,G) & TWEETED(A,T) & CONTAINS(T,W) & NEGATIVE_SENTIMENT(T)) >> ~BELONGS_TO(W,G), weight: 1.0
 
-        //single tweet co-occurance propagation
-        model.add rule: (CONTAINS(T,W1) & BELONGED_TO(W1,G) & CONTAINS(T,W2) & (W1-W2) & POSITIVE_SENTIMENT(T)) >> BELONGS_TO(W2,G), weight: 0.8
-        model.add rule: (CONTAINS(T,W1) & BELONGED_TO(W1,G) & CONTAINS(T,W2) & (W1-W2) & NEGATIVE_SENTIMENT(T)) >> ~BELONGS_TO(W2,G), weight: 0.8
+        //co-occurance
+        model.add rule: (CONTAINS(T,W1) & SEED_WORD(W1,G) & CONTAINS(T,W2) & (W1-W2) & POSITIVE_SENTIMENT(T)) >> BELONGS_TO(W2,G), weight: 1.0
+        model.add rule: (CONTAINS(T,W1) & SEED_WORD(W1,G) & CONTAINS(T,W2) & (W1-W2) & NEGATIVE_SENTIMENT(T)) >> ~BELONGS_TO(W2,G), weight: 1.0
 
 		//load data for inference
 		observedPartition = new Partition(cb.getInt("partitions.trainread", -1))
@@ -143,6 +140,7 @@ class electionsPSL{
         String sentimentsFile = inputFolder + '/sentiment.csv'
         String belongedToFile = inputFolder + '/belongedTo.csv'
         String wasMemberFile = inputFolder + '/wasMember.csv'
+        String seedWordFile = inputFolder + '/seedWords.csv'
 
         def readDB = data.getDatabase(observedPartition)
 
@@ -163,6 +161,9 @@ class electionsPSL{
 
         //insert BELONGED_TO predicate
         loadBelongedToPredicate(belongedToFile, readDB)
+
+        //insert SEED_WORDS predicate
+        loadSeedWordsPredicate(seedWordFile, readDB)
 
         //insert WAS_MEMBER predicates
         loadWasMemberPredicate(wasMemberFile, readDB)
@@ -258,16 +259,38 @@ class electionsPSL{
     }
 
     private void loadBelongedToPredicate(String belongedToFile, Database db){
-        FileInputStream fis = new FileInputStream(belongedToFile)
+        try{
+            FileInputStream fis = new FileInputStream(belongedToFile)
+		    Reader decoder = new InputStreamReader(fis, "UTF-8")
+		    BufferedReader reader = new BufferedReader(decoder)
+            while(reader.ready()){
+                String line = reader.readLine()
+                String[] splits = line.split(',')
+                double weight = Double.parseDouble(splits[2])
+                insertAtom(weight, db, BELONGED_TO, splits[0], splits[1])
+            }
+            log.info("BELONGED_TO words loaded")
+            reader.close()
+            decoder.close()
+            fis.close()
+        }
+        catch(FileNotFoundException e)
+        {
+            log.info("belongedToFile file not present..assuming 1st iteration")
+        }
+	}
+
+    private void loadSeedWordsPredicate(String seedWordFile, Database db){
+        FileInputStream fis = new FileInputStream(seedWordFile)
 		Reader decoder = new InputStreamReader(fis, "UTF-8")
 		BufferedReader reader = new BufferedReader(decoder)
         while(reader.ready()){
             String line = reader.readLine()
             String[] splits = line.split(',')
             double weight = Double.parseDouble(splits[2])
-            insertAtom(weight, db, BELONGED_TO, splits[0], splits[1])
+            insertAtom(weight, db, SEED_WORD, splits[0], splits[1])
         }
-        log.info("BELONGED_TO words loaded")
+        log.info("SEED_WORDS loaded")
         reader.close()
         decoder.close()
         fis.close()
@@ -305,7 +328,7 @@ class electionsPSL{
     public void inferAndPrint(String outputFolder){
         log.info("running inference")
         //inference
-        Database db = data.getDatabase(inferredPartition, [TWEETED, MENTIONS, RETWEET_OF, CONTAINS, POSITIVE_SENTIMENT, NEGATIVE_SENTIMENT, WAS_MEMBER, BELONGED_TO] as Set, observedPartition)
+        Database db = data.getDatabase(inferredPartition, [TWEETED, MENTIONS, RETWEET_OF, CONTAINS, POSITIVE_SENTIMENT, NEGATIVE_SENTIMENT, SEED_WORD, WAS_MEMBER, BELONGED_TO] as Set, observedPartition)
         LazyMPEInference inferenceApp = new LazyMPEInference(model,db, cb)
         inferenceApp.mpeInference()
         log.info("inference complete ...printing output")
