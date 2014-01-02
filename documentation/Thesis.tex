@@ -22,38 +22,27 @@
 % \renewcommand{\baselinestretch}{2}
 % \usepackage{epsf}
 
-%my packages
-%packages I used
+%--------packages I used----------------------------
 \usepackage{verbatim}
 \usepackage{latexsym}
 \usepackage{amsmath, amsfonts, amssymb}
 \usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subfig}
 \usepackage{url}
-% stuff copied from Bert's paper
 \usepackage{color}
-%\newcommand{\todo}[1]{\textcolor{red}{\textbf{todo: #1}}}
+\newcommand{\aravind}[1]{[{\color{blue}\textit{Aravind}\textit{: #1}}]}
+\newcommand{\naren}[1]{[{\color{red}\textit{Naren}\textit{: #1}}]}
+\newcommand{\TODO}[2]{{\color{magenta}[\textbf{TODO:} #2 \\ \textbf{Assignee:} #1]}}
+
+
+% symbols and stuff from Bert's paper
 \newcommand{\then}{\Rightarrow}
 \newcommand{\softor}{\operatornamewithlimits{\tilde{\vee}}}
 \newcommand{\softand}{\operatornamewithlimits{\tilde{\wedge}}}
 \newcommand{\softthen}{\operatornamewithlimits{\tilde{\then}}}
 \newcommand{\softneg}{\operatornamewithlimits{\tilde{\neg}}}
-\def\RVs{\mathbf{X}}
-\def\RV{{X}}
-\def\rvpt{{\mathbf{x}}}
-\def\reals{{\mathbb{R}}}
-\def\extReals{{\mathbb{R}^{\infty}}}
-\def\potentials{{\phi}}
-\def\potential{{\phi}}
-\def\prob{{\mathbb{P}}}
-\def\density{{f}}
-\def\psl{{PSL}}
-\def\Cineq{{B}}
-\def\Ceq{{A}}
-\def\bineq{{b}}
-\def\beq{{a}}
-\def\domain{{\mathbf{D}}}
-\def\kineq{{k_B}}
-\def\keq{{k_A}}
+%--------------------------------------------------------
 
 \begin{document}
 \thispagestyle{empty}
@@ -62,7 +51,7 @@
 \begin{center}
 % TITLE
 {\Large 
-Automated Vocabulary Creation For Elections
+Automated Social Group Modeling for Characterizing and Forecasting Elections
 }
 \vfill
 Aravindan Mahendiran
@@ -82,14 +71,14 @@ Aditya Prakash
 December 25, 2013 \\
 Blacksburg, Virginia
 \vfill
-Keywords: Forecasting, Dynamic Query Expansion, Elections, Probabilistic Soft Logic \\
+Keywords: Forecasting, Twitter, Query Expansion, Elections, Probabilistic Soft Logic \\
 Copyright 2013, Aravindan Mahendiran
 \end{center}
 \pagebreak
 \thispagestyle{empty}
 
 \begin{center}
-{\large Automated Vocabulary Creation For Elections}
+{\large Automated Social Group Modeling for Characterizing and Forecasting Elections}
 \vfill
 Aravindan Mahendiran
 \vfill
@@ -101,14 +90,14 @@ Strong correlations have been shown between Twitter \emph{‘mentions’} and st
 Even though such methodologies are accurate in forecasting the trends to a great extent, their performance is dictated by the domain specific vocabulary is used to track the relevant tweets. 
 Such a vocabulary is usually provided by subject matter experts but is not exhaustive.
 The language used in Twitter is drastically different from other forms of writing like those in news articles or even web blogs.  
-It constantly evolves with time as users adopt popular hashtags to express their opinion.
+It constantly evolves with time as users adopt popular hash-tags to express their opinion.
 Thus, the vocabulary used by the forecasting algorithms needs to be dynamic in nature and should capture the rising trends of the domain. 
 Otherwise, the prediction algorithms miss out on capturing the some of the most informative documents.
 \newline 
 We propose a novel unsupervised learning algorithm builds a vocabulary through modeling user preferences by exploiting the explicit and latent structure in such data sets.
 We use Probabilistic Soft Logic, a framework for probabilistic reasoning over relational domains, to develop a query expansion algorithm that learns such a dynamic vocabulary for any given domain.  
 Using 7 presidential elections from Latin America we show how such a query expansion methodology improves the recall and accuracy of two state of the art election prediction algorithms. 
-Through this approach we achieve close to 2x increase in the recall and 15.5\% reduction in the prediction error. 
+Through this approach we achieve close to 2x increase in the number of documents used for predictions and 16.13\% reduction in the prediction error. 
 \pagebreak
 
 % Dedication and Acknowledgments are both optional

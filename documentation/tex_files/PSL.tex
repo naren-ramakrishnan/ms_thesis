@@ -1,39 +1,40 @@
-\chapter{Dynamic Query Expansion}
-\markright{Aravindan Mahendiran \hfill Chapter 2. Dynamic Query Expansion\hfill}
+\chapter{Dynamic Query Expansion using Probabilistic Soft Logic}
+\markright{Aravindan Mahendiran \hfill Chapter 2. Dynamic Query Expansion using Probabilistic Soft Logic \hfill}
 \section{Query Expansion}
 In most document corpora, a single concept can be referred using multiple terms.
 In information retrieval (IR) this is called \emph{synonymy} and has a huge impact on the recall of documents pertaining to the concept.
 Researchers address this problem by creating as exhaustive a query as possible. 
-But when exploring the Twitter corpora it becomes almost impossible to hand craft such a expansive query as the meme and hashTag adaptations are not known a priori. 
+But when exploring the Twitter corpora it becomes almost impossible to hand craft such a expansive query as the meme and hash-tag adaptations are not known a priori. 
 \newline
-To address this issue IR experts use \emph{query expansion} or re-inforcement learning.
+To address this issue IR experts use \emph{query expansion} or reinforcement learning.
 These are iterative algorithms that are initialized with a small set of query terms. 
-When the documents matching the query terms are returned, after basic NLP processing such as tokenization, stop-word removal and stemming a richer vocabulary is obtained by ranking the terms in these documents by their frequency counts.
+When the documents matching the query terms are returned, after the basic Natural Language Processing such as tokenization, stop-word removal and stemming a richer vocabulary is obtained by ranking the terms in these documents by their frequency counts.
 The top n words from this list is then used to query the documents again. 
-The iterations are stopped when no new terms are added to the vocbulary. 
-We implement such an algorithm using Probabilistic Soft Logic to build our vocabulary for a given election.
+The iterations are stopped when no new terms are added to the vocabulary. 
+We implement such an algorithm using Probabilistic Soft Logic to build our vocabulary for a given election. 
+First we review the PSL framework followed by our methodology.
 \section{Probabilistic Soft Logic}
 Probabilistic Soft Logic ~\cite{kimmig2012short} is a framework for collective probabilistic reasoning on relational domains.
 PSL models have been developed in various domains, including collective classification ~\cite{broecheler2010computing}, ontology alignment ~\cite{brocheler2012probabilistic}, personalized medicine ~\cite{bach2010decision}, opinion diffusion ~\cite{bach2012scaling} , trust in social networks ~\cite{huang2012probabilistic}, and graph summarization ~\cite{memory2012graph}.
 PSL represents the domain of interest as logical atoms.
 It uses first order logic rules to capture the dependency structure of the domain, based on which it builds a joint probabilistic model over all atoms.
-Instead of hard truth values of $0$ (false) and $1$ (true), PSL uses soft truth values relaxing the truth vlaues to the interval $[0,1]$.
+Instead of hard truth values of $0$ (false) and $1$ (true), PSL uses soft truth values relaxing the truth values to the interval $[0,1]$.
 The logical connectives are adapted accordingly.
 This makes it easy to incorporate similarity or distance functions.
 \newline
 User defined \emph{predicates} are used to encode the relationships and attributes and \emph{rules} capture the  dependencies and constraints.
-Each rule's antecedant is a conjunction of atoms and its consequent is a disjunction. 
-The rules can also labled with non negative weights which are used during the inference process. 
-The set of predicates and weighted rules thus make up a PSL program where known truth values of ground atoms derived from observed data and unknown truth values for the remaining atoms are learnt using the PSL inference.
+Each rule's antecedent is a conjunction of atoms and its consequent is a dis-junction. 
+The rules can also labeled with non negative weights which are used during the inference process. 
+The set of predicates and weighted rules thus make up a PSL program where known truth values of ground atoms derived from observed data and unknown truth values for the remaining atoms are learned using the PSL inference.
 \newline
 Given a set of atoms 
 $\ell = \{\ell_1,\ldots,\ell_n\}$,
 an interpretation defined as 
 $I : \ell \rightarrow [0,1]^n$
 is a mapping from atoms to soft truth values.
-PSL defines a probability distribution over all such interpretaions such that those that satisfy more ground rules are more probable.
+PSL defines a probability distribution over all such interpretations such that those that satisfy more ground rules are more probable.
 \emph{Lukasiewicz t-norm} and its corresponding co-norm are used for defining relaxations of the logical AND and OR respectively to determine the degree to which a ground rule is satisfied.
-Given an interpretation $\mathit{I}$, PSL defines the formulas for the relaxation of the logical conjunction ($\wedge$), disjunction ($\vee$), and negation ($\neg$) as follows:
+Given an interpretation $\mathit{I}$, PSL defines the formulas for the relaxation of the logical conjunction ($\wedge$), dis-junction ($\vee$), and negation ($\neg$) as follows:
 
 \begin{align*}
 \ell_1 \softand \ell_2 &= \max\{0, I(\ell_1) + I(\ell_2) - 1\},\\
@@ -68,7 +69,7 @@ In the second setting, given ground truth data for all atoms we can learn the we
 In ~\cite{huang2012social}, we used PSL to model user affiliations within groups. 
 Specifically we built a PSL program for a  social network where we have a set of users, their posts, messages to other users and the various groups we want to model. 
 The rules we defined captured the dynamics of group affiliations through the various interactions.
-Through the MPE inference we classified users into different groups based on their hashtag usage and their interactions with other users.
+Through the MPE inference we classified users into different groups based on their hash-tag usage and their interactions with other users.
 \newline
 In this paper we extend our earlier work to achieve what we call dynamic query expansion through PSL. 
 Similar to the query expansion methodology described earlier we start with an initial set of key words which we believe are indicative of the affinity of a particular user to a candidate contesting in the election.
@@ -81,10 +82,10 @@ Was\_Member(A,G) \Rightarrow Is\_Memeber(A,G)
 Belonged(W,G) \Rightarrow Belongs(W,G)
 \end{align*}
 Here the predicates $Was\_Member$ and $Belonged$ are inferences from the previous time window and are loaded in as  prior to the current iteration.
-These rules are weighted slightly lower than the recursive rules below so that the system overcomes the bias it had learnt in light of new more convincing evidence.
-This way hashtags that are more indicative of a user's affiliation move up in the ranking for every successive iteration and the hashtags that aren't move down.
+These rules are weighted slightly lower than the recursive rules below so that the system overcomes the bias it had learned in light of new more convincing evidence.
+This way hash-tags that are more indicative of a user's affiliation move up in the ranking for every successive iteration and the hash-tags that aren't move down.
 A similar phenomenon occurs with the user-candidate affiliations too.
-Below we outline the recursive PSL rules that grows the hashtag preferences and the user affiliations. 
+Below we outline the recursive PSL rules that grows the hash-tag preferences and the user affiliations. 
 \begin{align*}
 \begin{split}
 Tweeted(A,T) 
@@ -148,40 +149,77 @@ Contains(T,W1)
 Here $Positive$ and $Negative$ are predicates whose truth values are calculated from the sentiment of the tweet such that the highly positive tweets get a truth value closer to $1.0$ for the predicate $Positive$. 
 Since PSL works under the close world assumption, we do not need to specify the groundings that are false.
 For tweets that do not have a positive or negative orientation we assign a truth value of $0.5$ for both the $Positive$ and $Negative$ predicates.
-The last two rules are added to encode the belief that hashtags occuring together are expected to be about the same group.
-%\paragraph{}
-For every iteration, we collect tweets from the country of interest that was created within the time window and filter the tweets that contain any hashtag from the previous inference  or that has been authored by or directed at a user whose affiliation is already known from the previous iterations.
+The last two rules are added to encode the belief that hash-tags occurring together are expected to be about the same group.
+For every iteration, we collect tweets from the country of interest that was created within the time window and filter the tweets that contain any hash-tag from the previous inference  or that has been authored by or directed at a user whose affiliation is already known from the previous iterations.
 We believe this helps us start with as little bias as possible and improve our learning with every time window.
 From various experiments conducted we noticed that we get best results for a window size of 3 days. 
-We begin this iterative approach by tracking tweets from 1 month prior to the election and thereby hoping to capture the changing trends in the use of hashTags.
-At the end of each iteration we are get each hashtag's probability of belonging to a particular candidate's vocabulary. 
-We normalize the each hashtag's weight over all previous time windows so that we identify hashtags that have remained indicative of a user's affiliation for the longest period of time without dropping in importance. 
-We then use the top hashtags ranked according to their normalized weights  for the next iteration.
-This normalization reduces the influx of hashtags that are in vogue only for a specific time window and are not as indicative of user affiliation for the entire time period. 
-\subsection{Performance}
-% word growth figure
-\begin{figure*}[Ht]
+We begin this iterative approach by tracking tweets from 1 month prior to the election and thereby hoping to capture the changing trends in the use of hash-tags.
+At the end of each iteration we are get each hash-tag's probability of belonging to a particular candidate's vocabulary. 
+We normalize the each hash-tag's weight over all previous time windows so that we identify hash-tags that have remained indicative of a user's affiliation for the longest period of time without dropping in importance. 
+We then use the top hash-tags ranked according to their normalized weights  for the next iteration.
+This normalization reduces the influx of hash-tags that are in vogue only for a specific time window and are not as indicative of user affiliation for the entire time period. 
+\newline
+\begin{figure*}
 	\centering
 	%\captionsetup{font=scriptsize}
-	\includegraphics[width=0.7\textwidth, height=0.3\textheight]{/Users/aravindan/Dropbox/git/ms_thesis/documentation/my_thesis/support_files/WordGrowth.png}
+	\includegraphics[width=0.7\textwidth, height=0.3\textheight]{support_files/WordGrowth.png}
 	\vspace{-1em}
-	\caption{Word growth over time}
+	\caption{Figure showing the growth of size of vocabulary for Hugo Chavez and Henrique Capriles with every iteration.}
 	\label{fig:wordgrowth}
-	\vspace{-1em}
-\end{figure*}	
-Figure\ref{fig:wordgrowth} shows the growth of the vocabulary with every iteration for the Venezuelan presidential election in 2012.
-% word cloud figure
-\begin{figure*}[ht]
-	\centering
-	%\captionsetup{font=scriptsize}
-	\includegraphics[width=1.0\textwidth]{/Users/aravindan/Dropbox/git/ms_thesis/documentation/my_thesis/support_files/caprilesWordCloud.png}
-	\vspace{-1em}
-	\caption{Word cloud for Henrique Capriles}
-	\label{fig:caprilesWordCloud}
 	\vspace{-1em}
 \end{figure*}
 
-Figure\ref{fig:caprilesWordCloud} shows a word cloud of hashtags which the system identified for Henrique Capriles.
-It is interesting to note that hashtags like 'capriles' which was part of the initial seed vocabulary is ranked much lower than hashtags. 
+Figure\ref{fig:wordgrowth} shows the increase in size of the vocabulary at the end of each iteration before the normalization operation.
+\begin{figure*}
+\begin{center}
+\subfloat[Day 0]
+{
+\includegraphics[width=0.5\textwidth, height=0.20\textheight]{support_files/caprilesWordCloud1.png}
+\label{fig:wordCloud1}
+} 
+\subfloat[Day 6]
+{
+\includegraphics[width=0.5\textwidth, height=0.20\textheight]{support_files/caprilesWordCloud2.png}
+\label{fig:wordCloud2}
+} \\
+\noindent 
+\subfloat[Day 15]
+{
+\includegraphics[width=0.5\textwidth, height=0.20\textheight]{support_files/caprilesWordCloud3.png}
+\label{fig:wordCloud3}
+}
+\subfloat[Day 30]
+{
+\includegraphics[width=0.5\textwidth, height=0.20\textheight]{support_files/caprilesWordCloud4.png}
+\label{fig:wordCloud4}
+}
+\caption[caption]{Evolution of hash-tags for Henrique Capriles} 
+\label{fig:wordCloud}
+\end{center}
+\end{figure*}
 
+Figure\ref{fig:wordCloud} shows a  the evolution  of hash-tags for Henrique Capriles.
+Initially in Figure\ref{fig:wordCloud1} the system starts with only a few hand picked hash-tags that constitute the seed vocabulary. 
+After a few iterations Figure\ref{fig:wordCloud2} shows how the vocabulary has grown.
+However, not all the words identified until now remain in the final vocabulary as the system drops certain words in successive iterations.
+At the same time it is also noticed that hash-tags like "capriles" and "hayuncamino" which are very strongly associated with Capriles consistently remain as the top ranked hash-tags even after ten iterations(Figure\ref{fig:wordCloud4}). 
+It is also interesting to note that the algorithm identified hash-tags like "nochavez"(Figure\ref{fig:wordCloud3}) and attributed it rightly to Hugo Chavez's primary contender - Capriles. 
+\newline
+\begin{figure*}[Ht]
+	\centering
+	%\captionsetup{font=scriptsize}
+	\includegraphics[width=0.7\textwidth, height=0.3\textheight]{support_files/hashTagTimeSeries.png}
+\vspace{-1em}
+	\caption{Time series comparison for different hash-tags identified for Hugo Chavez. The first plot shows "univistaconchavez" and "elmundocochavez". The second plot shows "beatles" and "facebook". The third plot shows "vivachavez" from two different elections conducted on 15th April 2013 and 7th October 2012.}
+	\label{fig:timeSeries}
+	\vspace{-1em}
+\end{figure*}
 
+In figure \ref{fig:timeSeries}, the first plot elucidates how hash-tags like \emph{"elmnduconchavez"} and \emph{"univistaconchavez"} remain highly associated with Hugo Chavez for the October 7th Presidential election. 
+These hash-tags remain indicative of a tweet's affiliation throughout the month leading up to the election.
+Meanwhile hashags such as \emph{"beatles"} and \emph{"facebook"} ( in second plot) show spikes in their time series primarily because users affiliated with Chavez used them during that time window. 
+But as iterative process continues the system drops these non-informative words.
+The third plot presents another interesting observation 
+The hashtag \emph{"vivachavez"} is part of both the Venezuelan elections despite the fact that Hugo Chavez did not contest the second election on April 15th 2013. 
+It is picked up as a phrase commonly used by supporters of Nicholas Maduro whose election campaign was strategized around the death of Hugo Chavez to garner sympathy and mobilize support.
+Similarly variations of the hash-tags \emph{"hayuncamino"} and \emph{"unidadvenuzela"} was returned for Henrique Capriles for both these elections.
