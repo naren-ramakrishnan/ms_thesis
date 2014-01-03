@@ -1,17 +1,17 @@
 \chapter{Evaluations and Results}
 \markright{Aravindan Mahendiran \hfill Chapter 3. Evaluations and Results \hfill}
-To evaluvate our hypothesis we test our models on different elections from Latin America.
+To evaluate our hypothesis we test our models on different elections from Latin America.
 The tweets are provided by DataSift, an infoveilence service that resells Twitter data.
 On an average we collect close to 2 million unique tweets a day from over 21 countries in Latin and South America.
 Then these tweets are geo-coded using a geo-location algorithm we developed to obtain tweets from the country of interest.
-We then run the two prediction algorithms to get their baseline perfermance.
+We then run the two prediction algorithms to get their baseline performance.
 These two models have been tested extensively on 36 elections from Latin America from 2012-2013 including Presidential, Governor and Mayoral elections. 
 Out of these 36 elections, the models predicted 21 of them correctly. 
 %The combined track record for the two elections have been detailed in \ref{table:trackRecord}. 
-Importantly every single election was predicted ahead of time and not in reterospect.
+Importantly every single election was predicted ahead of time and not in retrospect.
 The models perform poorly on local mayoral elections(12 out of 24 predicted correctly) as there was not much chatter on Twitter about these elections to make sound predictions. 
 The regression model was used only for presidential elections as opinion polls were not available for Governor and Mayoral elections.
-Hence we use only the presidential elections to evaluavate our vocabulary.
+Hence we use only the presidential elections to evaluate our vocabulary.
 Once we have the baseline score for these models, we then use the same vocabulary to seed our PSL learning algorithm. 
 The prediction algorithms are then run again, now by using the expanded vocabulary obtained through the query expansion at each iteration.
 %track record table
@@ -20,7 +20,7 @@ The prediction algorithms are then run again, now by using the expanded vocabula
 	\centering
 	\begin{tabular}{| r || r | r | r | r | r | r |}
  	\hline
- 	Election & UniVis+Seed & UniVis+PSL & Improv. & Reg+Seed & Reg.+PSL & Improv\\
+ 	Election & UniVis+Seed & UniVis+PSL & Improvement & Reg+Seed & Reg+PSL & Improvement\\
  	\hline
 	Mexico & 0.353 & 0.368 & -4.2\% & 0.123 & 0.07 & 43.09\% \\ 	
  	Venezuela\_Oct7 & 0.069	& 0.077 & -11.59\% & 0.158 & 0.109 & 31.01\&\\
@@ -33,7 +33,7 @@ The prediction algorithms are then run again, now by using the expanded vocabula
  	\hline
 	\end{tabular}
 	\vspace{-0.5em}
-	\caption{Performance of models with different vocabs measures using Mean Absolute Percentage Error}
+	\caption{Performance of models with different vocabulary measured using Mean Absolute Percentage Error}
 	\label{table:improvement}
 	\vspace{-0.5em}
 \end{table*}	

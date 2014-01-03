@@ -1,12 +1,12 @@
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {2.1}{\ignorespaces Figure showing the growth of size of vocabulary for Hugo Chavez and Henrique Capriles with every iteration.\relax }}{16}
-\contentsline {figure}{\numberline {2.2}{\ignorespaces caption}}{16}
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Growth of vocabulary for Hugo Chavez and Henrique Capriles with every iteration.\relax }}{16}
+\contentsline {figure}{\numberline {2.2}{\ignorespaces Evolution of hash-tags for Henrique Capriles\relax }}{16}
 \contentsline {subfigure}{\numberline {(a)}{\ignorespaces {Day 0}}}{16}
 \contentsline {subfigure}{\numberline {(b)}{\ignorespaces {Day 6}}}{16}
 \contentsline {subfigure}{\numberline {(c)}{\ignorespaces {Day 15}}}{16}
 \contentsline {subfigure}{\numberline {(d)}{\ignorespaces {Day 30}}}{16}
-\contentsline {figure}{\numberline {2.3}{\ignorespaces Time series comparison for different hash-tags identified for Hugo Chavez. The first plot shows "univistaconchavez" and "elmundocochavez". The second plot shows "beatles" and "facebook". The third plot shows "vivachavez" from two different elections conducted on 15th April 2013 and 7th October 2012.\relax }}{17}
+\contentsline {figure}{\numberline {2.3}{\ignorespaces Time series comparison for different hash-tags identified for Hugo Chavez. \relax }}{17}
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \contentsline {figure}{\numberline {4.1}{\ignorespaces Recall of seed vocabulary vs PSL vocabulary\relax }}{25}
