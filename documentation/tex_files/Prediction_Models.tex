@@ -57,9 +57,32 @@ Popularity(x) = \alpha_1 * SoPM(x) + \alpha_2 * SoNM(x) \\
 						 + \gamma * SoS(x) + \delta * Incumbency(x) + \epsilon
 \end{split}
 \end{equation}
-From the  weights learned from the regression fit we confirm that the sentiment and number of unique users have more predictive power than the number of mentions.	
-After learning the regression fit, we make a prediction by building such features using the same 10 day window leading up to the prediction date.
+Table\ref{table:coeff} details the coefficients learned for each feature averaged over all the candidates from all the elections.
+The values confirm our hypothesis that the number of unique users and sentiment have more predictive power than total number of mentions.
+Intuitively it is also seen that the coefficients for share of negative users and negative mentions carry a negative weight.
+Another interesting observation is the fact that the incumbency binary variable is not very predictive which is contradictory to the popular opinion.
 
+\begin{table*}
+        \centering
+        \begin{tabular}{| l | l |}
+        \hline
+        Feature & Coefficient Value\\
+        \hline
+        $SoPU$ & 0.4622\\
+        $SoNU$ & -0.443\\
+        $SoPM$ & 0.1158\\
+        $SoNM$ & -0.065\\
+        $SoS$ & 0.156\\
+        $Incumbency$ & 0.0\\
+        \hline
+        \end{tabular}
+        \vspace{-0.5em}
+        \caption{Regression coefficients learned for features}
+        \label{table:coeff}
+        \vspace{-0.5em}
+\end{table*}
+
+After learning the regression fit, we make a prediction by building such features using the same 10 day window leading up to the prediction date.
 \section{Performance}
 The Unique Visitor Model and the Regression Model were tested on a total of 36 elections from Latin America during 2012-2013 ranging from local mayor elections to presidential elections at the country level.
 Only tweets from the locations pertaining to elections were used to make the predictions.
