@@ -1,9 +1,21 @@
 \chapter{Conclusions and Future Work}
 \markright{Aravindan Mahendiran \hfill Chapter 4. Conclusions and Future Work \hfill}
-In this work we built a novel query expansion methodology using Probabilistic Soft Logic.
-We showed how such a vocabulary has a direct impact on the recall of documents and the accuracy of prediction algorithms.
-%Specifically we were on an average able to reduce the MAPE error of election prediction algorithms by 15.58\%.
-It is important to note that though we used elections to show performance gains, the query expansion system is generic and can be used to learn a vocabulary for any given domain.
-Further, this work is motivated towards a future goal to model the electorate demographics.
+\aravind{I am having trouble structuring the this section and also with the language to be used to detail the future work. Can you help me out here?}
+In this work we built two prediction algorithms to forecast elections and showed how Twitter in addition to standard opinion polls can be used to pulse the political opinion of a country.
+We also established the reproducibility of election predictions using Twitter by forecasting more than thirty elections from Latin America.
+We then implemented a novel query expansion methodology using Probabilistic Soft Logic.
+We showed how vocabulary has a direct impact on the recall of documents and the accuracy of prediction algorithms.
+Using the query expansion methodology we were able to improve the accuracy of the prediction algorithms by upto 16\%.  
+It is also important to note that though we used elections to show performance gains, the query expansion system is generic and can be used to learn a vocabulary for any given domain.
+\newline
+Further, this work was motivated towards a future goal to model the electorate demographics.
 With more fine grained data about the gender, age and exact location of a user it is possible to infer the preferences at a group level rather than at a user level.
 This would enable us to study the various interactions between groups and individual users in more detail and thus make more informed election predictions.
+\newline
+While modeling the interactions between users using PSL we used hard coded rule weights. 
+With a labeled data set providing ground truths about user affiliations it is possible to study the various forms of interactions by using the weight learning mechanism of PSL to understand which theories about social group modeling are more probable and which aren't.
+\newline
+Also, while tracking the candidates using the seed vocabulary we noticed that using the names of candidates introduced a lot of noise as some of the names such as 'Jose' are very common. 
+To avoid this we propose to use more sophisticated named entity recognition to improve the accuracy of the tweets returned about a particular candidate. 
+\newline
+In addition to Twitter, we also propose to use other data sources such as Google Search Trends, Facebook and web blogs to track the popularity of candidates online.
