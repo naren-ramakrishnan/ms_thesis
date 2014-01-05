@@ -70,12 +70,6 @@ if __name__ == "__main__":
     ap.add_argument('-df', '--dataFolder', type=str,
                     help='folder to store intermediate outputs and final outputs',
                     default='/home/aravindan/Dropbox/git/ms_thesis/data/psl')
-    ap.add_argument('-ut', '--userThreshold', type=float,
-                    help='probability threshold of user membership',
-                    default=0.60)
-    ap.add_argument('-wt', '--wordThreshold', type=float,
-                    help='probability threshold for vocab',
-                    default=0.70)
     ap.add_argument('-c', '--country', type=str,
                     help='country to model elections for',
                     default='venezuela')
