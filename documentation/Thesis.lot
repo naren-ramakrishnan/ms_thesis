@@ -1,8 +1,8 @@
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {3.1}{\ignorespaces Regression coefficients learned for features\relax }}{22}
-\contentsline {table}{\numberline {3.2}{\ignorespaces Track Record of Prediction Algorithms\relax }}{23}
+\contentsline {table}{\numberline {3.1}{\ignorespaces Regression coefficients learned for features\relax }}{24}
+\contentsline {table}{\numberline {3.2}{\ignorespaces Track Record of Prediction Algorithms\relax }}{25}
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {4.1}{\ignorespaces Performance of models with different vocabulary measured using Mean Absolute Percentage Error\relax }}{25}
+\contentsline {table}{\numberline {4.1}{\ignorespaces Improvement in prediction accuracy\relax }}{29}
 \addvspace {10\p@ }

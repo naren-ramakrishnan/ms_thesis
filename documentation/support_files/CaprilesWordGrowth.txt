@@ -11,16 +11,7 @@ proximo:0.699719767
 radonski:0.699719767
 segundaoportunidad:0.706217596
 centrodevotacion:0.706483426
-similacroelectoral:0.706655165
-despiertavenezuela:0.709540194
-barlo:0.711295126
-sevesesiente:0.713492344
-hechoenvenezuela:0.715859694
-puebl:0.71898147
-planprimerempleo:0.719179894
-lamejorvenezuela:0.719847814
 capriteamo:0.763657997
-casaxcasa:0.765177866
 hcaprilesrpresidente:0.771602727
 eleccionespresidenciales:0.784151367
 capriles:0.693453

@@ -6,30 +6,29 @@ Twitter users post messages called tweets on a public message board  and these t
 Originally the tweets were meant to be personal status updates but over the years these tweets have evolved into much more.
 Now apart from simple status updates, tweets can be URLs websites or even directed messages to particular individuals.
 Due to the short nature of the messages users often combine multiple words into \emph{hash-tags} to convey their views.
-Therefore, these hash-tags become the most important part of a tweet as the entire essence of the tweet is captured in single hash-tag.. 
+Therefore, these hash-tags become the most important part of a tweet as often the entire essence of the tweet is captured in single hash-tag.
 These hash-tags evolve over time and gain more traction as users adopt the popular ones.
 This makes the language used in Twitter very different from other textual web content like blogs and articles.
 \newline
 Today twitter has grown so big\footnote{As of May 7,2013 twitter has 555 million active registered users with 135000 new users signing up everyday and approximately 1 billion tweets created every 5 days}
 that it has come to be looked at as a treasure trove of mine-able data.
 With official APIs that are open to public, the easy access to large volumes of data has piqued the interest of scientists in the data mining community.
-Researchers have studied various real world phenomenon like book sales, box office earnings and even stock prices and have not only shown that they have  strong correlations to the chatter on Twitter ~\cite{gruhl2005predictive,asur2010predicting,bollen2011twitter}
-but were also able to make forecasts about future trends too.
+Researchers have studied various real world phenomenon like book sales~\cite{gruhl2005predictive}, box office earnings~\cite{asur2010predicting} and even stock prices~\cite{bollen2011twitter} and have not only shown  strong correlations to the chatter on Twitter but were also able to make forecasts about future trends too.
 \paragraph{}
-However, the more curious research is whether the on-line chatter be used to model the social, economic and political landscape of a country.
+The more curious research though is whether the on-line chatter can be used to model the social, economic or political landscape of a country.
 Political leaders have started using Twitter as a channel to mobilize supporters for their ideologies.
-For the 2008 US presidential election Barack Obama used social media and specifically Twitter extensively in his campaign. 
+For instance, during the 2008 US presidential election Barack Obama used social media and specifically Twitter extensively in his campaign. 
 His victory established Twitter as a channel to garner support for a particular ideology be it political or otherwise.
-Bollen et al. ~\cite{bollen2011modeling} used a version of the well-established psychometric instrument- Profile of Mood States(POMS) to model the mood of twitter traffic and correlate it to a number of social and economic events that occurred during the same time period. 
-The results from this research instigated more researchers to study and quantify the political sentiment through social media and if possible even forecast election results.
+Bollen et al. in their research ~\cite{bollen2011modeling} used a version of the well-established psychometric instrument- Profile of Mood States(POMS) to model the mood of Twitter traffic and found correlations to a number of social and economic events that occurred during the same time period. 
+The results from this research instigated more researchers to study and quantify the political sentiment through social media and if possible even forecast elections.
+\paragraph{}
 However, there is a constant debate among political scientists on whether Twitter can be used as a surrogate for political opinion of the masses.
-Some believe twitter indeed is an indicator of political opinions, while others question the validity of such results.. 
-In this work we aim to answer these questions by trying to improve the performance of election prediction algorithms that use Twitter.
-The following section reviews the current state of the art approaches to election prediction. 
-
+Some believe twitter indeed is an indicator of political opinions while others question the validity of such results.. 
+In this work we aim to answer these questions by modeling online social groups and improving the performance of election prediction algorithms that use Twitter.
+In the following section we review the current state of the art approaches to election prediction using Twitter.. 
 \section{Related Work}
 We divide the literature review into three parts.
-First we look at a selection of volume based approaches to predict elections i.e., models that predict election results by merely counting the number of times a particular candidate is mentioned in Twitter.
+First we look at a selection of volume based approaches to predict elections i.e., models that predict election results by merely counting the number of times a particular candidate is mentioned on Twitter.
 Then we review more sophisticated approaches that model the demographics of an election to make more informed predictions.
 Lastly, we shall summarize a quite prevalent pessimistic view on such methodologies' capability to predict elections.
 %Lastly we review Probabilistic Soft Logic, a framework we use to build a vocabulary dynamically.
@@ -41,9 +40,9 @@ They go on to strongly conclude that Twitter can indeed be a valid indicator of 
 This was followed by ~\cite{o2010tweets,saez2011total,bermingham2011using,demartini2011analyzing} all of which use volume based approaches combined with sentiment analysis.
 Both ~\cite{o2010tweets,bermingham2011using} fit a regression model to opinion polls with volume of mentions and sentiment as independent variables and the opinion polls as the dependent variable. 
 They conclude that sentiment is a weak predictor compared to share of volume.
-\newline In general the methodologies described in these publications count the occurrence of certain hand filtered keywords in the "Twittersphere" and classify such tweets as positive or negative using a classifier trained on human annotated lexicons.
-Some advanced sentiment classifiers also provide the likelihood that given sample of text belongs to an empirically defined psychological and structural categories like anxiety, anger, sadness etc.
-
+\newline 
+In general the methodologies described in these publications count the occurrence of certain hand crafted keywords from the "Twittersphere" and classify such tweets as positive or negative using a classifier trained on human annotated lexicons.
+%Some advanced sentiment classifiers also provide the likelihood that given sample of text belongs to an empirically defined psychological and structural categories like anxiety, anger, sadness etc. 
 \subsection{Profile Modelling}
 More sophisticated approaches are adapted in ~\cite{livne2011party,conover2011predicting,diaz2012taking}. 
 The authors either model the candidates or the voters in the elections rather than compute the aggregated sentiment of the mass.  
@@ -53,20 +52,18 @@ Through latent semantic analysis they claim to have identified the hidden struct
 Livne et al. in ~\cite{livne2011party} analyze the Twitter profiles of candidates who contesting in the 2010 mid-term elections in the U.S. 
 They identify topics specific to groups of candidates, split according to their known political orientations and use the features obtained as inputs to a regression model to predict the elections. 
 In a similar technique Diaz-Aviles in ~\cite{diaz2012taking} model the candidates by building a emotional vector for each candidate by using the mentions of that candidate and sentiments associated with each mention learned using the NRC EmotionLexicon(EmoLex). 
-They use these profiles to predict the rise and fall of a candidate's popularity. 
-
+They then use these profiles learned to predict the rise and fall of a candidate's popularity. \\
 In another research, Mustafaraj et al. ~\cite{mustafaraj2011vocal} model the distribution of political content among Twitter users. 
 They divide the users into two groups the "vocal minority" and the "silent majority". 
 They observe that these two groups engage in different ways in social media.
 The vocal minority aim to broaden the impact of tweets by re-tweeting and linking to other web-content whereas the silent majority who tweet significantly lesser are more inclined to share their personal view points.
 Though they do not make any predictions about elections, they make very valid observations such as 
 \emph{"Because of this differences between content generated by different groups , one should be aware of aggregating data and building models upon them, without verifying the underlying model that has generated the data."}.
-
 \subsection{Flaws in current state of the art}
 Of late there has been a lot of studies showing how such models that predict elections using social media feeds are flawed ~\cite{metaxas2011not,gayo2012wanted,gayo2011don,gayo2011limits}.
-These publications not only list the obvious issues in using Twitter to predict elections but also detail recommendations on how to make such methodologies better.
-Daniel Gayo-Avello surveys almost all the state of the art approaches in predicting elections in his paper ~\cite{gayo2012wanted} most of which is detailed above.
-According to him post-hoc analysis of elections in retrospect must not count as valid predictions and also states that researchers do not report negative results leading to what is called the \emph{file drawer} effect. 
+These publications not only list the obvious issues in using Twitter to predict elections but also detail recommendations on how to make such methodologies better.\\
+Daniel Gayo-Avello surveys almost all the state of the art approaches in predicting elections in his paper ~\cite{gayo2012wanted} most of which are detailed above.
+According to him post-hoc analysis of elections in retrospect must not count as valid predictions and that researchers do not report negative results leading to what is called the \emph{file drawer} effect. 
 His major points of argument against such models are:
 \begin{itemize}
 \item
@@ -89,25 +86,23 @@ Further, these classifiers do not detect humor and sarcasm which in his opinion 
 %Lastly in ~\cite{gayo2011don} Gayo-Avello akin to ~\cite{mustafaraj2011vocal} states that abstaining from tweeting about politics can play even more important role than the ones mentioning the candidates and hence researches should also model this lack of chatter about a particular candidate or political party.
 \end{itemize}
 \section{Motivation}
-The one thing that the previously described prediction methodologies have in common is the process of filtering to obtain tweets pertaining to the particular election.
-Usually this is done by a process of querying the Twitter API for a bunch of keywords such as the candidate name and political party names.
-Given that the language used in twitter is completely different from the language in newspapers and magazines, this process gives a very low recall.
-For example, for the 2012 presidential elections in Venezuela users preferred  the hash-tags \emph{\#elmundocochavez} and \emph{\#hayuncamino} to show their support for Hugo Chavez and Henrique Capriles respectively.
+The one thing that the previously described prediction methodologies have in common is the process of filtering tweets that match a vocabulary to obtain those that pertain to the particular election.
+Usually this is done by a process of querying the Twitter API for a set of keywords such as the names of the candidate and political parties contesting the elections.
+Given that the language used on Twitter is completely different from the language in newspapers and magazines, this process gives a very low recall.\aravind{Recall is used as a place holder. How to word this better?}
+For example, for the 2012 presidential election in Venezuela users preferred  the hash-tags \emph{\#elmundocochavez} and \emph{\#hayuncamino} to show their support for Hugo Chavez and Henrique Capriles respectively.
 Such hash-tags are not known a priori and gain more traction and adaptation closer to the election.
 Querying just for "chavez" or "capriles" would result in missing out on a huge chunk of tweets that are indicative of a user's political preference.
-Thus it becomes vital that any methodology that predicts elections accounts for such memes that become popular during the time period leading up to the election.
-%\newline
-In this work we address this issue by building on our earlier work ~\cite{huang2012social}.
-Specifically we make the following contributions:
+Thus, it becomes vital that any methodology that predicts elections accounts for such memes that become popular during the time period leading up to the election.\\
+In this work we build on our earlier work ~\cite{huang2012social} and address this issue by:
 \begin{itemize}
 \item
-Design and implement a new dynamic query expansion algorithm using Probabilistic Soft Logic to obtain a exhaustive vocabulary.
+Designing and implementing a new dynamic query expansion algorithm using Probabilistic Soft Logic to obtain a exhaustive vocabulary.
 \item
-Show how the vocabulary obtained from the Dynamic Query Expansion exercise improves the recall and accuracy of the prediction algorithms.
+Showing how the vocabulary obtained from the Dynamic Query Expansion exercise improves the recall\aravind{again placeholder} and accuracy of the prediction algorithms.
 \end{itemize}
 \section{Document Overview}
-The rest of the document is structured as follows:
+The rest of the document is organized as follows:
 \newline In the next chapter, we outline the Probabilistic Soft Logic framework and how we take advantage of this domain specific language to build our dynamic query expansion algorithm.
-\newline In the third chapter, we detail two algorithms from the current state of the art used to predict elections.
-\newline Then we detail our experiments and present the results confirming our hypothesis.
+\newline In the third chapter, we detail two state of the art algorithms used to predict elections.
+\newline We then detail our experiments and present the results confirming our hypothesis in the fourth chapter.
 \newline In the final chapter, we make our final conclusions and present the road map for future work.

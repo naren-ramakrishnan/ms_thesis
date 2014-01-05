@@ -1,5 +1,5 @@
-\chapter{Dynamic Query Expansion using Probabilistic Soft Logic}
-\markright{Aravindan Mahendiran \hfill Chapter 2. Dynamic Query Expansion using Probabilistic Soft Logic \hfill}
+\chapter{Dynamic Query Expansion}
+\markright{Aravindan Mahendiran \hfill Chapter 2. Dynamic Query Expansion\hfill}
 \section{Query Expansion}
 In most document corpora, a single concept can be referred using multiple terms.
 In information retrieval (IR) this is called \emph{synonymy} and has a huge impact on the recall of documents pertaining to the concept.
@@ -8,11 +8,11 @@ But when exploring the Twitter corpora it becomes almost impossible to hand craf
 \newline
 To address this issue IR experts use \emph{query expansion} or reinforcement learning.
 These are iterative algorithms that are initialized with a small set of query terms. 
-When the documents matching the query terms are returned, after the basic Natural Language Processing such as tokenization, stop-word removal and stemming a richer vocabulary is obtained by ranking the terms in these documents by their frequency counts.
-The top n words from this list is then used to query the documents again. 
-The iterations are stopped when no new terms are added to the vocabulary. 
-We implement such an algorithm using Probabilistic Soft Logic to build our vocabulary for a given election. 
-First we review the PSL framework followed by our methodology.
+When the documents matching the query terms are returned, after basic  processing such as tokenization, stop-word removal and stemming a richer vocabulary is obtained by ranking the terms in these documents by their frequency counts.
+The top words from this list is then used to query the documents again. 
+This process goes on until no new terms are added to the vocabulary. 
+We design and implement such an pipeline using Probabilistic Soft Logic to build our vocabulary for a given election. 
+We first review the PSL framework before proceeding to detail our methodology.
 \section{Probabilistic Soft Logic}
 Probabilistic Soft Logic ~\cite{kimmig2012short} is a framework for collective probabilistic reasoning on relational domains.
 PSL models have been developed in various domains, including collective classification ~\cite{broecheler2010computing}, ontology alignment ~\cite{brocheler2012probabilistic}, personalized medicine ~\cite{bach2010decision}, opinion diffusion ~\cite{bach2012scaling} , trust in social networks ~\cite{huang2012probabilistic}, and graph summarization ~\cite{memory2012graph}.
@@ -25,7 +25,7 @@ This makes it easy to incorporate similarity or distance functions.
 User defined \emph{predicates} are used to encode the relationships and attributes and \emph{rules} capture the  dependencies and constraints.
 Each rule's antecedent is a conjunction of atoms and its consequent is a dis-junction. 
 The rules can also labeled with non negative weights which are used during the inference process. 
-The set of predicates and weighted rules thus make up a PSL program where known truth values of ground atoms derived from observed data and unknown truth values for the remaining atoms are learned using the PSL inference.
+The set of predicates and weighted rules thus make up a PSL program where known truth values of ground atoms are set from observed data and unknown truth values for the remaining atoms are learned using the PSL inference mechanism.
 \newline
 Given a set of atoms 
 $\ell = \{\ell_1,\ldots,\ell_n\}$,
@@ -41,7 +41,7 @@ Given an interpretation $\mathit{I}$, PSL defines the formulas for the relaxatio
 \ell_1 \softor \ell_2 &= \min\{I(\ell_1) + I(\ell_2), 1\},\\
 \softneg l_1 &= 1 - I(\ell_1),
 \end{align*}  
-
+where we use \textasciitilde to indicate the relaxation of the Boolean domain.
 The interpretation $\mathit{I}$ determines whether the rules is satisfied, if not, the \emph{distance to satisfaction}.
 A rule $\mathit{r} \equiv \mathit{r_{body}} \rightarrow \mathit{r_{head}} $  is satisfied if and only if the truth value of head is atleast that of the body. The rule's distance to satisfaction measures the degree to which this condition is violated.
  \newline
@@ -61,30 +61,68 @@ the probability density function $\mathit{f}$ over $\mathit{I}$ is defined as
 	Z = \int_{I} \text{exp} [ -\sum_{r\in R} \lambda_r (d_r(I))^p ]
 \end{equation}
 where~$\lambda_r$ is the weight of the rule~$r$, $Z$ is the continuous version of the normalization constant used in discrete Markov random fields, and ~$p \in \{1, 2\}$ provides a choice between two different loss functions, linear and quadratic.
-The values of the atoms can be further restricted by providing linear equality and inequality constraints allowing one to encode functional constraints from the domain. 
+The values of the atoms can be further restricted by providing linear equality and inequality constraints allowing one to encode functional constraints from the domain.
+\paragraph{}
 PSL provides for two kinds of inferences (a)most probable explanation and (b)calculation of the marginal distributions. 
 In the MPE inference given a partial interpretation with grounded atoms based on observed evidence, the PSL program infers the truth values for the unobserved atoms satisfying the most likely interpretation. 
 In the second setting, given ground truth data for all atoms we can learn the weights for the rules in our PSL program.
-\section{Query Expansion using PSL}
+In our work we leverage the MPE inference.
+\section{Dynamic Query Expansion using PSL}
 In ~\cite{huang2012social}, we used PSL to model user affiliations within groups. 
 Specifically we built a PSL program for a  social network where we have a set of users, their posts, messages to other users and the various groups we want to model. 
 The rules we defined captured the dynamics of group affiliations through the various interactions.
 Through the MPE inference we classified users into different groups based on their hash-tag usage and their interactions with other users.
-\newline
+\paragraph{}
 In this paper we extend our earlier work to achieve what we call dynamic query expansion through PSL. 
-Similar to the query expansion methodology described earlier we start with an initial set of key words which we believe are indicative of the affinity of a particular user to a candidate contesting in the election.
-Now instead of a single inference, we iteratively perform the inference over successive time windows such that the inference from window $w_t$ is used as a prior to window $w_{t+1}$ and the inference from that is used for window $w_{t+2}$ and so on.
-In order to capture the temporal connectivity between the iterations, in addition to the adaptation of rules from ~\cite{huang2012social} we define additional rules and predicates as follows:
+Similar to the query expansion methodology described earlier we start with an initial set of hash-tags which we believe are indicative of the affinity of a particular user to a candidate contesting in the election.
+We refer to these hash-tags as seed words.
+Instead of a single inference, we iteratively perform the inference over successive time windows such that the inference from window $w_t$ is used as a prior to window $w_{t+1}$ and the inference from that is used for window $w_{t+2}$ and so on.
+\begin{figure*}[Ht]
+	\centering
+	%\includegraphics[scale=0.50]{support_files/flowChart.png}
+	\includegraphics[height=0.5\textheight, width=1.0\textwidth]{support_files/flowChart.png}
+	\caption{Design of the query expansion pipeline.}
+	\label{fig:flowchart}
+\end{figure*}
+\paragraph{}
+Figure\ref{fig:flowchart} illustrates the design of the iterative algorithm for dynamic query expansion.
+The initial pre-processing starts with the tweet input stream which is filtered by the date range specified by the window size. 
+For each election, tweets from a month leading up to the election were used.
+After extensive analysis it was determined that the most optimal window size was 3 days. 
+Smaller window sizes resulted in sub-optimal inferences as there were not enough data points feeding into the PSL stage.
+Larger window sizes lead to memory issues as the PSL optimization has a time complexity of  $O(n^{3.5})$ where $n$ is the number of relevant rule groundings, i.e., those with non-zero distance to satisfaction. 
+The tweets passing the date filter are then geo-coded using a geo-location algorithm that infers the location of a tweet. 
+This ensures that only tweets originating from the country of interest are used.
+The geo-location algorithm tags the tweets with a location by looking at the GPS coordinates of the tweet if available or landmarks and locations mentioned in the tweet or author's profile. 
+For tweets that do not have either of these information it uses a label propagation algorithm to infer the author's location through his/her network.
+\newline
+The geo-tagged tweets are then tracked for the presence of a hash-tag from the vocabulary for that particular iteration.
+In addition to filtering tweets using the vocabulary the authors whose affiliations are already inferred by the system are also used as a filtering criteria.
+The tweets are then converted into PSL predicates and fed into the inference process.
+The PSL program infers the hash-tags and tweeters that are mostly associated with a particular candidate. 
+Each author and hash-tag's association with a candidate is measured using the truth value of the predicate grounding.
+In the post-processing step, these truth values are filtered by a threshold value to identify the hash-tags and authors strongly associated to a candidate.
+These hash-tags become a part of the vocabulary of the candidate and along with the users identified are used as a filter criterion for the next iteration.
+This iterative process proceeds until the day before the election when we obtain the final vocabulary which are strongly associated with a candidate.
+\paragraph{}
+Within the PSL program we define predicates to encode the network. 
+The predicates $Tweeted(U,T)$ and $Contains(T,W)$  capture the fact that a user $U$ tweeted a tweet $T$ and tweet $T$ contains hash-tag $W$ respectively. 
+Similarly, the belief that a user $U$ or hash-tag $W$ is affiliated/associated to the group $G$ is encoded as $Is\_Member(U,G)$ and $Belongs(W,G)$ respectively.
+In order to capture the temporal connectivity between the iterations, in addition to the initiating the inference process with the rule
+\begin{align*}
+Seed\_Word(W,G) \Rightarrow Belongs(W,G)
+\end{align*}
+we define additional rules such as
 \begin{align*}
 Was\_Member(A,G) \Rightarrow Is\_Memeber(A,G)
 \end{align*}
 \begin{align*}
 Belonged(W,G) \Rightarrow Belongs(W,G)
 \end{align*}
-Here the predicates $Was\_Member$ and $Belonged$ are inferences from the previous time window and are loaded in as  prior to the current iteration.
+where the predicates $Was\_Member$ and $Belonged$ are inferences from the previous time window and are loaded in as  priors for the current iteration.
 These rules are weighted slightly lower than the recursive rules below so that the system overcomes the bias it had learned in light of new more convincing evidence.
-This way hash-tags that are more indicative of a user's affiliation move up in the ranking for every successive iteration and the hash-tags that aren't move down.
-A similar phenomenon occurs with the user-candidate affiliations too.
+This way hash-tags that are more indicative of a user's affiliation are assigned stronger truth values or weights for every successive iteration and the weights hash-tags that aren't are reduced.
+The same reasoning applies to the user-candidate affiliations(memberships) too.
 Below we outline the recursive PSL rules that grows the hash-tag preferences and the user affiliations. 
 \begin{align*}
 \begin{split}
@@ -125,12 +163,21 @@ Is\_Member(A,G)
 	\Rightarrow \sim Belongs(W,G)
 \end{split}
 \end{align*}
-
+Here $Positive$ and $Negative$ are predicates whose truth values are calculated from the sentiment of the tweet such that the highly positive tweets get a truth value closer to $1.0$ for the predicate $Positive$ and highly negative tweets are assigned a truth value of $1.0$ for the predicate $Negative$. 
+Since PSL works under the close world assumption, we do not need to specify the groundings that are false i.e., positive tweets are not assigned $0.0$ for the predicate $Negative$ and vice-versa.
+\begin{figure*}
+	\centering
+	\includegraphics[scale=0.50]{support_files/WordGrowth.png}
+	\caption{Vocabulary growth with each iteration.}
+	\label{fig:wordgrowth}
+\end{figure*}
+For tweets that do not have a positive or negative orientation we assign a truth value of $0.5$ for both the $Positive$ and $Negative$ predicates.\\
+The last two rules defined below encode the assumption that when two hash-tags co-occur and one is a name of a candidate then the other hash-tag is bound to be about the candidate too.
 \begin{align*}
 \begin{split}
 Contains(T,W1)
  \softand Contains(T,W2)
-  \softand Belonged(W1,G)\\ 
+  \softand Seed\_Word(W1,G)\\ 
   \softand Positive(T)
 	\Rightarrow Belongs(W2,G)
 \end{split}
@@ -140,84 +187,57 @@ Contains(T,W1)
 \begin{split}
 Contains(T,W1) 
 	\softand Contains(T,W2)
-	\softand Belonged(W1,G)\\ 
+	\softand Seed\_Word(W1,G)\\ 
 	\softand Negative(T)
 	\Rightarrow \sim Belongs(W2,G)
 \end{split}
 \end{align*}
-
-Here $Positive$ and $Negative$ are predicates whose truth values are calculated from the sentiment of the tweet such that the highly positive tweets get a truth value closer to $1.0$ for the predicate $Positive$. 
-Since PSL works under the close world assumption, we do not need to specify the groundings that are false.
-For tweets that do not have a positive or negative orientation we assign a truth value of $0.5$ for both the $Positive$ and $Negative$ predicates.
-The last two rules are added to encode the belief that hash-tags occurring together are expected to be about the same group.
-For every iteration, we collect tweets from the country of interest that was created within the time window and filter the tweets that contain any hash-tag from the previous inference  or that has been authored by or directed at a user whose affiliation is already known from the previous iterations.
-We believe this helps us start with as little bias as possible and improve our learning with every time window.
-From various experiments conducted we noticed that we get best results for a window size of 3 days. 
-We begin this iterative approach by tracking tweets from 1 month prior to the election and thereby hoping to capture the changing trends in the use of hash-tags.
-At the end of each iteration we are get each hash-tag's probability of belonging to a particular candidate's vocabulary. 
-We normalize the each hash-tag's weight over all previous time windows so that we identify hash-tags that have remained indicative of a user's affiliation for the longest period of time without dropping in importance. 
-We then use the top hash-tags ranked according to their normalized weights  for the next iteration.
-This normalization reduces the influx of hash-tags that are in vogue only for a specific time window and are not as indicative of user affiliation for the entire time period. 
-\newline
+Once all the tweets are loaded into the PSL program as predicates, we start the inference process by closing all the predicates except $Is\_Member$ and $Belongs$. 
+This way, only their truth values are inferred.
+\section{Results}
 \begin{figure*}
 	\centering
-	%\captionsetup{font=scriptsize}
-	\includegraphics[width=0.7\textwidth, height=0.3\textheight]{support_files/WordGrowth.png}
-	\vspace{-1em}
-	\caption{Growth of vocabulary for Hugo Chavez and Henrique Capriles with every iteration.}
-	\label{fig:wordgrowth}
-	\vspace{-1em}
+	\subfloat[Day 0]
+	{
+		\includegraphics[width=0.5\textwidth, height=0.20\textheight]{support_files/caprilesWordCloud1.png}
+		\label{fig:wordCloud1}
+	} 
+	\subfloat[Day 6]
+	{
+		\includegraphics[width=0.5\textwidth, height=0.20\textheight]{support_files/caprilesWordCloud2.png}
+		\label{fig:wordCloud2}
+	} \\
+	\noindent 
+	\subfloat[Day 15]
+	{
+		\includegraphics[width=0.5\textwidth, height=0.20\textheight]{support_files/caprilesWordCloud3.png}
+		\label{fig:wordCloud3}
+	}
+	\subfloat[Day 30]
+	{
+		\includegraphics[width=0.5\textwidth, height=0.20\textheight]{support_files/caprilesWordCloud4.png}
+		\label{fig:wordCloud4}
+	}
+	\caption{Evolution of hash-tags for Henrique Capriles} 
+	\label{fig:wordCloud}
 \end{figure*}
 
-Figure\ref{fig:wordgrowth} shows the increase in size of the vocabulary at the end of each iteration before the normalization operation.
-\begin{figure*}
-\begin{center}
-\subfloat[Day 0]
-{
-\includegraphics[width=0.5\textwidth, height=0.20\textheight]{support_files/caprilesWordCloud1.png}
-\label{fig:wordCloud1}
-} 
-\subfloat[Day 6]
-{
-\includegraphics[width=0.5\textwidth, height=0.20\textheight]{support_files/caprilesWordCloud2.png}
-\label{fig:wordCloud2}
-} \\
-\noindent 
-\subfloat[Day 15]
-{
-\includegraphics[width=0.5\textwidth, height=0.20\textheight]{support_files/caprilesWordCloud3.png}
-\label{fig:wordCloud3}
-}
-\subfloat[Day 30]
-{
-\includegraphics[width=0.5\textwidth, height=0.20\textheight]{support_files/caprilesWordCloud4.png}
-\label{fig:wordCloud4}
-}
-\caption{Evolution of hash-tags for Henrique Capriles} 
-\label{fig:wordCloud}
-\end{center}
-\end{figure*}
-
-Figure\ref{fig:wordCloud} shows a  the evolution  of hash-tags for Henrique Capriles.
+Figure\ref{fig:wordgrowth} shows  how the vocabulary grows with each iteration for the two candidates who contested the Venezuelan presidential election on October 7th 2012.\\
+Figure\ref{fig:wordCloud} shows how the hash-tags for Henrique Capriles evolved during the month leading up to the election.
 Initially in Figure\ref{fig:wordCloud1} the system starts with only a few hand picked hash-tags that constitute the seed vocabulary. 
 After a few iterations Figure\ref{fig:wordCloud2} shows how the vocabulary has grown.
 However, not all the words identified until now remain in the final vocabulary as the system drops certain words in successive iterations.
 At the same time it is also noticed that hash-tags like "capriles" and "hayuncamino" which are very strongly associated with Capriles consistently remain as the top ranked hash-tags even after ten iterations(Figure\ref{fig:wordCloud4}). 
-It is also interesting to note that the algorithm identified hash-tags like "nochavez"(Figure\ref{fig:wordCloud3}) and attributed it rightly to Hugo Chavez's primary contender - Capriles. 
-\newline
+It is also interesting to note that the algorithm identified hash-tags like "nochavez"(Figure\ref{fig:wordCloud3}) and attributed it rightly to Hugo Chavez's primary contender- Capriles. \\
 \begin{figure*}[Ht]
 	\centering
-	%\captionsetup{font=scriptsize}
-	\includegraphics[width=0.7\textwidth, height=0.3\textheight]{support_files/hashTagTimeSeries.png}
-\vspace{-1em}
-	\caption{Time series comparison for different hash-tags identified for Hugo Chavez. }
+	\includegraphics[scale=0.65]{support_files/hashTagTimeSeries.png}
+	\caption{Time series comparison for different hash-tags identified for Hugo Chavez.}
 	%The first plot shows "univistaconchavez" and "elmundocochavez". The second plot shows "Beatles" and "Facebook". The third plot shows "vivachavez" from two different elections conducted on 15th April 2013 and 7th October 2012.
 	\label{fig:timeSeries}
-	\vspace{-1em}
 \end{figure*}
-
 In figure \ref{fig:timeSeries}, the first plot elucidates how hash-tags like \emph{"elmnduconchavez"} and \emph{"univistaconchavez"} remain highly associated with Hugo Chavez for the October 7th Presidential election. 
-These hash-tags remain indicative of a tweet's affiliation throughout the month leading up to the election.
+These hash-tags remain indicative of a user's affiliation throughout the month leading up to the election.
 Meanwhile hash-tags such as \emph{"beatles"} and \emph{"facebook"} ( in second plot) show spikes in their time series primarily because users affiliated with Chavez used them during that time window. 
 But as iterative process continues the system drops these non-informative words.
 The third plot presents another interesting observation 

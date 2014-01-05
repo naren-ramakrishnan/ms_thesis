@@ -1,13 +1,14 @@
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {2.1}{\ignorespaces Growth of vocabulary for Hugo Chavez and Henrique Capriles with every iteration.\relax }}{16}
-\contentsline {figure}{\numberline {2.2}{\ignorespaces Evolution of hash-tags for Henrique Capriles\relax }}{16}
-\contentsline {subfigure}{\numberline {(a)}{\ignorespaces {Day 0}}}{16}
-\contentsline {subfigure}{\numberline {(b)}{\ignorespaces {Day 6}}}{16}
-\contentsline {subfigure}{\numberline {(c)}{\ignorespaces {Day 15}}}{16}
-\contentsline {subfigure}{\numberline {(d)}{\ignorespaces {Day 30}}}{16}
-\contentsline {figure}{\numberline {2.3}{\ignorespaces Time series comparison for different hash-tags identified for Hugo Chavez. \relax }}{17}
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Design of the query expansion pipeline.\relax }}{14}
+\contentsline {figure}{\numberline {2.2}{\ignorespaces Vocabulary growth with each iteration.\relax }}{17}
+\contentsline {figure}{\numberline {2.3}{\ignorespaces Evolution of hash-tags for Henrique Capriles\relax }}{18}
+\contentsline {subfigure}{\numberline {(a)}{\ignorespaces {Day 0}}}{18}
+\contentsline {subfigure}{\numberline {(b)}{\ignorespaces {Day 6}}}{18}
+\contentsline {subfigure}{\numberline {(c)}{\ignorespaces {Day 15}}}{18}
+\contentsline {subfigure}{\numberline {(d)}{\ignorespaces {Day 30}}}{18}
+\contentsline {figure}{\numberline {2.4}{\ignorespaces Time series comparison for different hash-tags identified for Hugo Chavez.\relax }}{19}
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {4.1}{\ignorespaces Recall of seed vocabulary vs PSL vocabulary\relax }}{25}
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Recall of seed vocabulary vs PSL vocabulary\relax }}{28}
 \addvspace {10\p@ }

@@ -1,6 +1,5 @@
 \chapter{Prediction Models}
 \markright{Aravindan Mahendiran \hfill Chapter 3. Prediction Models \hfill}
-
 In this section we review two prediction models we adapted from current literature to test our hypothesis. 
 The first one is a naive model that forecasts elections based on the counts of mentions of a candidate.
 We dub this as  \emph{"unique visitor model"} and is adapted from \cite{saez2011total} and \cite{tumasjan2010predicting}.
@@ -10,7 +9,7 @@ This we dub as the \emph{"regression model"} and is adapted from \cite{bermingha
 Without any loss of generality, it can be assumed that large parties that are more popular will have a larger social media foot print than smaller and less popular parties. 
 This model takes advantage of this assumption and predicts elections by calculating the relative popularity of candidates contesting the election.
 We first define a vocabulary for each candidate. 
-This vocabulary is crafted by hand and includes the candidate's names and aliases, the name and acronyms for his/her political party and the official Twitter handle of the candidate.
+This vocabulary is crafted by hand and includes the candidate's names and aliases, the name and acronyms for his/her political party and the official Twitter handle of the candidate and is same as the seed vocabulary that was used to initialize the PSL pipeline.
 For the given time period, the tweets from the country in question are tracked for the occurrence of the terms in the vocabulary.
 We then build a time series of sentiment and Klout scores from the tweets returned.
 Klout score is a value provided by Klout.com that quantifies the impact each user has on social media. 
@@ -28,7 +27,6 @@ This gives us the relative popularity of each candidate $P_d$ using which we pre
 \end{equation}
 From the above equations, it is noticeable that each user contributes only once to the popularity score of a candidate.
 This was preferred to merely counting the mentions of a candidate since we wanted to remove the bias of bot generated tweets from election campaigns that boosted the number of times a candidate is mentioned on Twitter.
-
 \section{Regression Model}
 In this model, in addition to Twitter data, we leverage the opinion polls available for the elections to make our predictions.
 Like the earlier model we track the tweets that contain a word from the vocabulary defined for each candidate.
@@ -43,7 +41,7 @@ and share of negative users($SoNU$) as:
 \begin{equation}
 SoNU(x) = \frac{\sum_j K_j}{\sum_i \sum_j K_j}
 \end{equation}
-where $K_j$ is the Klout score of user $j$ who tweeted about a candidate.
+where $K_j$ is the Klout score of user $j$ who tweeted negatively about a candidate.
 Similarly we define share of sentiment ($SoS$) as the sum of all sentiment scores normalized across all candidates. 
 We use a binary variable for incumbency. 
 We then build a time-line of opinion polls. 
@@ -61,10 +59,9 @@ Table\ref{table:coeff} details the coefficients learned for each feature average
 The values confirm our hypothesis that the number of unique users and sentiment have more predictive power than total number of mentions.
 Intuitively it is also seen that the coefficients for share of negative users and negative mentions carry a negative weight.
 Another interesting observation is the fact that the incumbency binary variable is not very predictive which is contradictory to the popular opinion.
-
 \begin{table*}
         \centering
-        \begin{tabular}{| l | l |}
+        \begin{tabular}{|l|r|}
         \hline
         Feature & Coefficient Value\\
         \hline
@@ -76,30 +73,14 @@ Another interesting observation is the fact that the incumbency binary variable 
         $Incumbency$ & 0.0\\
         \hline
         \end{tabular}
-        \vspace{-0.5em}
         \caption{Regression coefficients learned for features}
         \label{table:coeff}
-        \vspace{-0.5em}
 \end{table*}
-
 After learning the regression fit, we make a prediction by building such features using the same 10 day window leading up to the prediction date.
 \section{Performance}
-The Unique Visitor Model and the Regression Model were tested on a total of 36 elections from Latin America during 2012-2013 ranging from local mayor elections to presidential elections at the country level.
-Only tweets from the locations pertaining to elections were used to make the predictions.
-For example, for the Rio De Janeiro Mayor elections only tweets from the city of Rio De Janeiro were used and similarly for state level Governor elections only tweet originating from that particular state was used.
-Once the tweets were filtered by location the time series of Klout and sentiment scores were calculated by tracking the tweets for the mentions of candidate.
-Table\ref{table:trackRecord} below shows the over all performance of the two models. 
-It can be noticed that the accuracy drops as the granularity of the elections reduces. 
-This is primarily due to the fact that, opinion polls were available only for the country level elections.
-Therefore, we could not use the Regression Model for the state or city level elections.
-This increased the error as the predictions were generated only from the naive Unique Visitor Model.
-Also, it from the tweets collected it was noticed that there wasn't much chatter on these smaller local elections.
-This skewed the results as the model tracking the names of the candidates was using tweets that mentioned the candidate's name but wasn't about the candidate contesting in the election but was about some other person having the same name as the candidate.
-If the city level elections were ignored as outliers the over all accuracy of the models improves to 91.6\%.
-
 \begin{table*}
         \centering
-        \begin{tabular}{| l | l | l | l |}
+        \begin{tabular}{| l | r | r | r |}
         \hline
         Election Type & Number of Elections & Number of Correct Predictions & Accuracy\\
         \hline
@@ -109,8 +90,22 @@ If the city level elections were ignored as outliers the over all accuracy of th
         Overall & 36 & 23 & 63.88\%\\
         \hline
         \end{tabular}
-        \vspace{-0.5em}
         \caption{Track Record of Prediction Algorithms}
         \label{table:trackRecord}
-        \vspace{-0.5em}
 \end{table*}
+The Unique Visitor Model and the Regression Model were tested exhaustively on a total of 36 elections from Latin America during 2012 and 2013 ranging from local mayor elections to presidential elections at the country level.
+It is important to note that every single election was predicted ahead of time and not in retrospect.
+The tweets were purchased from DataSift, an infoveilence service that resells Twitter data.
+On an average we collected close to 2 million unique tweets a day from over 21 countries in Latin and South America.
+Then these tweets were geo-coded using a geo-location algorithm we developed to obtain tweets from the country of interest.
+Only tweets from the locations pertaining to elections were used to make the predictions.
+For example, for the Rio De Janeiro Mayor elections only tweets from the city of Rio De Janeiro were used and similarly for state level Governor elections only tweet originating from that particular state was used.
+Once the tweets were filtered by location the time series of Klout and sentiment scores were calculated by tracking the tweets for the mentions of candidate.\\
+Table\ref{table:trackRecord} below shows the over all performance of the two models. 
+It can be noticed that the accuracy drops as the granularity of the elections reduces. 
+This is primarily due to the fact that, opinion polls were available only for the country level elections.
+Therefore, we could not use the Regression Model for the state or city level elections.
+This increased the error as the predictions were generated only from the naive Unique Visitor Model.\\
+Also, from the tweets collected it was noticed that there wasn't much chatter on Twitter about these smaller local elections.
+This skewed the results as the model tracking the names of the candidates was using tweets that mentioned the candidate's name but wasn't about the candidate contesting in the election but was about some other person having the same name as the candidate.
+If the city level elections were ignored as outliers the over all accuracy of the models improves to 91.6\%.
